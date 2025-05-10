@@ -1,6 +1,7 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:circle_nav_bar/circle_nav_bar.dart';
+import 'package:group_chat_app/screens/group_details_screen.dart';
 import 'package:group_chat_app/screens/login_screen.dart';
 import 'package:group_chat_app/screens/signup_screen.dart';
 import 'package:group_chat_app/screens/home_page.dart';
@@ -27,11 +28,19 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/':              (_) => const LoginScreen(),
-        '/signup':        (_) => const SignupScreen(),
-        '/home':          (_) => const MyHomePage(),
-        '/select_members':(_) => const SelectMembersPage(),
-        '/create_task':   (_) => const CreateTaskPage(),
+        '/': (context) => const LoginScreen(),
+        '/signup': (context) => const SignupScreen(),
+        '/home': (context) => const MyHomePage(),
+        '/select_members': (context) => const SelectMembersPage(),
+        '/create_task': (context) => const CreateTaskPage(),
+        '/group_details': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+          return GroupDetailsScreen(
+            groupName: args?['groupName'] ?? '',
+            subject: args?['subject'] ?? '',
+            imageAsset: args?['imageAsset'] ?? 'assets/profiles/profile_7.jpg',
+          );
+        },
       },
     );
   }
@@ -69,19 +78,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    const circleBg      = Color(0xFFB5FB67);
-    const iconColor     = Color(0xFF0E1213);
+    const circleBg = Color(0xFFB5FB67);
+    const iconColor = Color(0xFF0E1213);
     const inactiveColor = Color.fromARGB(255, 105, 112, 114);
-    const navBg         = Color(0xFF212D2D);
-    const appBarBg      = Color(0xFF0E1213);
+    const navBg = Color(0xFF212D2D);
+    const appBarBg = Color(0xFF0E1213);
 
-    final leftColor  = _selectedPage == 0 ? circleBg : inactiveColor;
+    final leftColor = _selectedPage == 0 ? circleBg : inactiveColor;
     final rightColor = _selectedPage == 1 ? circleBg : inactiveColor;
 
     // sizes must match your CircleNavBar settings:
     final circleSize = 60.0;
-    final navHeight  = 60.0;
-    final screenW    = MediaQuery.of(context).size.width;
+    final navHeight = 60.0;
+    final screenW = MediaQuery.of(context).size.width;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -98,8 +107,7 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 const CircleAvatar(
                   radius: 24,
-                  backgroundImage:
-                      AssetImage('assets/profile (7).jpg'),
+                  backgroundImage: AssetImage('assets/profile (7).jpg'),
                 ),
                 const SizedBox(width: 12),
                 Column(
@@ -157,34 +165,26 @@ class _MyHomePageState extends State<MyHomePage> {
             iconCurve: Curves.elasticOut,
             inactiveIcons: [
               Icon(
-                _selectedPage == 0
-                    ? Icons.home
-                    : Icons.home_outlined,
+                _selectedPage == 0 ? Icons.home : Icons.home_outlined,
                 size: 28,
                 color: leftColor,
               ),
               Icon(_centerIcon, size: 28, color: iconColor),
               Icon(
-                _selectedPage == 1
-                    ? Icons.assignment
-                    : Icons.assignment_outlined,
+                _selectedPage == 1 ? Icons.assignment : Icons.assignment_outlined,
                 size: 28,
                 color: rightColor,
               ),
             ],
             activeIcons: [
               Icon(
-                _selectedPage == 0
-                    ? Icons.home
-                    : Icons.home_outlined,
+                _selectedPage == 0 ? Icons.home : Icons.home_outlined,
                 size: 28,
                 color: leftColor,
               ),
               Icon(_centerIcon, size: 28, color: iconColor),
               Icon(
-                _selectedPage == 1
-                    ? Icons.assignment
-                    : Icons.assignment_outlined,
+                _selectedPage == 1 ? Icons.assignment : Icons.assignment_outlined,
                 size: 28,
                 color: rightColor,
               ),
