@@ -68,7 +68,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     // In a real app, you would validate and create the account here
     
     // Navigate to the main screen (same as login)
-    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+    Navigator.pushNamedAndRemoveUntil(context, '/profile_picture', (route) => false);
   }
 
   @override

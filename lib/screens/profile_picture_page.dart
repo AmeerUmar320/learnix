@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:group_chat_app/theme.dart';
 import 'package:group_chat_app/utils/image_picker_util.dart';
 import 'package:group_chat_app/widgets/common_widgets.dart';
-import 'package:group_chat_app/screens/select_members_page.dart';
 
 class ProfilePicturePage extends StatefulWidget {
   const ProfilePicturePage({super.key});
@@ -93,12 +92,8 @@ class _ProfilePicturePageState extends State<ProfilePicturePage> {
               PrimaryButton(
                 text: 'Next',
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SelectMembersPage(),
-                    ),
-                  );
+                  // Navigate to home page instead of select members page
+                  Navigator.pushReplacementNamed(context, '/home');
                 },
               ),
             ],

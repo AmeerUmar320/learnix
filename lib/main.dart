@@ -8,6 +8,7 @@ import 'package:group_chat_app/screens/home_page.dart';
 import 'package:group_chat_app/screens/tasks_page.dart';
 import 'package:group_chat_app/screens/select_members_page.dart';
 import 'package:group_chat_app/screens/create_task_page.dart';
+import 'package:group_chat_app/screens/profile_picture_page.dart';
 
 void main() => runApp(const MyApp());
 
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const LoginScreen(),
         '/signup': (context) => const SignupScreen(),
+        '/profile_picture': (context) => const ProfilePicturePage(),
         '/home': (context) => const MyHomePage(),
         '/select_members': (context) => const SelectMembersPage(),
         '/create_task': (context) => const CreateTaskPage(),
@@ -215,4 +217,4 @@ class _MyHomePageState extends State<MyHomePage> {
       ],
     );
   }
-}
+} 
