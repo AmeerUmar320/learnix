@@ -1,4 +1,6 @@
-# group_chat_app
+# Learnix - Study Group Organizer
+
+This repo contains the project for frontend of the app in flutter.
 
 A new Flutter project.
 
