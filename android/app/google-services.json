@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "867467617003",
+    "project_id": "learnix-chat",
+    "storage_bucket": "learnix-chat.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:867467617003:android:1ef1ae2950ddf19e4c14ae",
+        "android_client_info": {
+          "package_name": "com.example.group_chat_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnW7GNtDa5XmN_039JlBZplP0RZDj9WE0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:867467617003:android:c593f51f7a4e349f4c14ae",
+        "android_client_info": {
+          "package_name": "com.learnix.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnW7GNtDa5XmN_039JlBZplP0RZDj9WE0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

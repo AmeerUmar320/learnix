@@ -2,43 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:group_chat_app/theme.dart';
 import 'package:group_chat_app/widgets/common_widgets.dart';
 import 'package:group_chat_app/screens/group_info_page.dart';
-
-class Contact {
-  final String name;
-  final String email;
-  final String? avatarUrl;
-  bool isSelected;
-
-  Contact({
-    required this.name,
-    required this.email,
-    this.avatarUrl,
-    this.isSelected = false,
-  });
-}
+import 'package:group_chat_app/models/contact.dart';
 
 class SelectMembersPage extends StatefulWidget {
   const SelectMembersPage({super.key});
-
   @override
   State<SelectMembersPage> createState() => _SelectMembersPageState();
 }
 
 class _SelectMembersPageState extends State<SelectMembersPage> {
-  final TextEditingController _searchController = TextEditingController();
+  final _searchController = TextEditingController();
   final List<Contact> _allContacts = [
-    Contact(name: 'Alex Johnson', email: 'alex@example.com'),
-    Contact(name: 'Jamie Smith', email: 'jamie@example.com'),
-    Contact(name: 'Taylor Brown', email: 'taylor@example.com'),
-    Contact(name: 'Morgan Davis', email: 'morgan@example.com'),
-    Contact(name: 'Casey Wilson', email: 'casey@example.com'),
-    Contact(name: 'Jordan Miller', email: 'jordan@example.com'),
-    Contact(name: 'Riley Moore', email: 'riley@example.com'),
-    Contact(name: 'Quinn Thomas', email: 'quinn@example.com'),
-    Contact(name: 'Avery Martinez', email: 'avery@example.com'),
-    Contact(name: 'Reese Anderson', email: 'reese@example.com'),
+    Contact(
+      uid: 'uid1',
+      name: 'Alex Johnson',
+      email: 'alex@example.com',
+    ),
+    Contact(
+      uid: 'uid2',
+      name: 'Jamie Smith',
+      email: 'jamie@example.com',
+    ),
+    // … add more with unique uids …
   ];
-  List<Contact> _filteredContacts = [];
+  late List<Contact> _filteredContacts;
 
   @override
   void initState() {
@@ -55,28 +42,23 @@ class _SelectMembersPageState extends State<SelectMembersPage> {
   }
 
   void _filterContacts() {
-    final query = _searchController.text.toLowerCase();
+    final q = _searchController.text.toLowerCase();
     setState(() {
-      if (query.isEmpty) {
-        _filteredContacts = List.from(_allContacts);
-      } else {
-        _filteredContacts = _allContacts
-            .where((contact) =>
-                contact.name.toLowerCase().contains(query) ||
-                contact.email.toLowerCase().contains(query))
-            .toList();
-      }
+      _filteredContacts = q.isEmpty
+          ? List.from(_allContacts)
+          : _allContacts.where((c) {
+              return c.name.toLowerCase().contains(q) ||
+                  c.email.toLowerCase().contains(q);
+            }).toList();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final selectedContacts = _allContacts.where((c) => c.isSelected).toList();
+    final selected = _allContacts.where((c) => c.isSelected).toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Select Members'),
-      ),
+      appBar: AppBar(title: const Text('Select Members')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -91,23 +73,22 @@ class _SelectMembersPageState extends State<SelectMembersPage> {
                 controller: _searchController,
                 decoration: AppTheme.inputDecoration(
                   labelText: 'Search contacts',
-                  prefixIcon: const Icon(Icons.search, color: AppTheme.textGray),
+                  prefixIcon:
+                      const Icon(Icons.search, color: AppTheme.textGray),
                 ),
               ),
               const SizedBox(height: 16),
-              if (selectedContacts.isNotEmpty) ...[
-                Text(
-                  'Selected (${selectedContacts.length})',
-                  style: AppTheme.subheadingStyle,
-                ),
+              if (selected.isNotEmpty) ...[
+                Text('Selected (${selected.length})',
+                    style: AppTheme.subheadingStyle),
                 const SizedBox(height: 8),
                 SizedBox(
                   height: 60,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    itemCount: selectedContacts.length,
-                    itemBuilder: (context, index) {
-                      final contact = selectedContacts[index];
+                    itemCount: selected.length,
+                    itemBuilder: (_, i) {
+                      final c = selected[i];
                       return Padding(
                         padding: const EdgeInsets.only(right: 12.0),
                         child: Column(
@@ -118,21 +99,18 @@ class _SelectMembersPageState extends State<SelectMembersPage> {
                                   radius: 20,
                                   backgroundColor: AppTheme.mediumGray,
                                   child: Text(
-                                    contact.name.substring(0, 1).toUpperCase(),
+                                    c.name[0].toUpperCase(),
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
                                 Positioned(
-                                  right: -4,
                                   top: -4,
+                                  right: -4,
                                   child: GestureDetector(
                                     onTap: () {
-                                      setState(() {
-                                        contact.isSelected = false;
-                                      });
+                                      setState(() => c.isSelected = false);
                                     },
                                     child: Container(
                                       padding: const EdgeInsets.all(2),
@@ -140,11 +118,8 @@ class _SelectMembersPageState extends State<SelectMembersPage> {
                                         color: Colors.red,
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const Icon(
-                                        Icons.close,
-                                        size: 12,
-                                        color: Colors.white,
-                                      ),
+                                      child: const Icon(Icons.close,
+                                          size: 12, color: Colors.white),
                                     ),
                                   ),
                                 ),
@@ -152,11 +127,9 @@ class _SelectMembersPageState extends State<SelectMembersPage> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              contact.name.split(' ')[0],
+                              c.name.split(' ').first,
                               style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.white,
-                              ),
+                                  color: Colors.white, fontSize: 12),
                             ),
                           ],
                         ),
@@ -169,41 +142,24 @@ class _SelectMembersPageState extends State<SelectMembersPage> {
               Expanded(
                 child: ListView.builder(
                   itemCount: _filteredContacts.length,
-                  itemBuilder: (context, index) {
-                    final contact = _filteredContacts[index];
+                  itemBuilder: (ctx, i) {
+                    final c = _filteredContacts[i];
                     return ListTile(
                       leading: CircleAvatar(
                         backgroundColor: AppTheme.mediumGray,
-                        child: Text(
-                          contact.name.substring(0, 1).toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: Text(c.name[0].toUpperCase(),
+                            style: const TextStyle(color: Colors.white)),
                       ),
-                      title: Text(
-                        contact.name,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      subtitle: Text(
-                        contact.email,
-                        style: const TextStyle(color: AppTheme.textGray),
-                      ),
+                      title:
+                          Text(c.name, style: const TextStyle(color: Colors.white)),
+                      subtitle:
+                          Text(c.email, style: const TextStyle(color: AppTheme.textGray)),
                       trailing: Checkbox(
-                        value: contact.isSelected,
+                        value: c.isSelected,
                         activeColor: AppTheme.neonGreen,
-                        onChanged: (value) {
-                          setState(() {
-                            contact.isSelected = value!;
-                          });
-                        },
+                        onChanged: (v) => setState(() => c.isSelected = v!),
                       ),
-                      onTap: () {
-                        setState(() {
-                          contact.isSelected = !contact.isSelected;
-                        });
-                      },
+                      onTap: () => setState(() => c.isSelected = !c.isSelected),
                     );
                   },
                 ),
@@ -215,10 +171,9 @@ class _SelectMembersPageState extends State<SelectMembersPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => GroupInfoPage(
-                        selectedContacts: _allContacts
-                            .where((c) => c.isSelected)
-                            .toList(),
+                      builder: (_) => GroupInfoPage(
+                        selectedContacts:
+                            _allContacts.where((c) => c.isSelected).toList(),
                       ),
                     ),
                   );

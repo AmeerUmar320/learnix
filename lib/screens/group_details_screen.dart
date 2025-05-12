@@ -6,11 +6,11 @@ class GroupDetailsScreen extends StatefulWidget {
   final String imageAsset;
 
   const GroupDetailsScreen({
-    Key? key,
+    super.key,
     required this.groupName,
     required this.subject,
     required this.imageAsset,
-  }) : super(key: key);
+  });
 
   @override
   State<GroupDetailsScreen> createState() => _GroupDetailsScreenState();
@@ -232,7 +232,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -271,7 +271,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -313,7 +313,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -322,7 +322,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(

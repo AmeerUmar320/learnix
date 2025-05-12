@@ -8,10 +8,10 @@ import 'package:flutter/material.dart';
 class SimpleTaskCard extends StatefulWidget {
   final String title;
   // **No longer const** – remove `const` here
-  SimpleTaskCard({
-    Key? key,
+  const SimpleTaskCard({
+    super.key,
     required this.title,
-  }) : super(key: key);
+  });
 
   @override
   State<SimpleTaskCard> createState() => _SimpleTaskCardState();
@@ -71,12 +71,11 @@ class TaskWithSubtasksCard extends StatefulWidget {
   final List<String> subtaskTitles;
 
   TaskWithSubtasksCard({
-    Key? key,
+    super.key,
     required this.title,
     required this.dueText,
     required this.subtaskTitles,
-  })  : assert(subtaskTitles.isNotEmpty, 'Provide at least one subtask'),
-        super(key: key);
+  })  : assert(subtaskTitles.isNotEmpty, 'Provide at least one subtask');
 
   @override
   State<TaskWithSubtasksCard> createState() => _TaskWithSubtasksCardState();

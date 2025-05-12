@@ -1,0 +1,25 @@
+{
+"flutter": {
+"platforms": {
+"android": {
+"default": {
+"projectId": "learnix-chat",
+"appId": "1:867467617003\\:android:1ef1ae2950ddf19e4c14ae",
+"fileOutput": "android/app/google-services.json"
+}
+},
+"dart": {
+"lib/firebase\\_options.dart": {
+"projectId": "learnix-chat",
+"configurations": {
+"android": "1:867467617003\\:android:1ef1ae2950ddf19e4c14ae",
+"web": "1:867467617003\\:web:4856c2d6b7adb8604c14ae"
+}
+}
+}
+}
+},
+"storage": {
+"rules": "storage.rules"
+}
+}

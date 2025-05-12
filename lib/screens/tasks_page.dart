@@ -1,13 +1,18 @@
 // lib/screens/tasks_page.dart
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 import 'package:group_chat_app/widgets/task_card.dart';
 
 class TasksPage extends StatelessWidget {
-  const TasksPage({Key? key}) : super(key: key);
+  const TasksPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     const bgColor = Color(0xFF0E1213);
+    // Get current user’s UID
+    final uid = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -15,7 +20,6 @@ class TasksPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Text(
@@ -28,43 +32,69 @@ class TasksPage extends StatelessWidget {
               ),
             ),
 
-            // Task cards
+            // ── Firestore “collectionGroup” stream ───────────
             Expanded(
-              child: ListView(
-                children: [
-                  // A simple toggle task
-                  SimpleTaskCard(title: 'Read Chapter 1'),
+              child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: FirebaseFirestore.instance
+                    .collectionGroup('tasks')
+                    .where('createdBy', isEqualTo: uid)
+                    .orderBy('due')
+                    .snapshots(),
+                builder: (ctx, snap) {
+                  if (snap.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final docs = snap.data?.docs ?? [];
+                  if (docs.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'No tasks yet',
+                        style: TextStyle(color: Colors.white54),
+                      ),
+                    );
+                  }
 
-                  // A task with 4 subtasks
-                  TaskWithSubtasksCard(
-                    title: 'Prepare Presentation',
-                    dueText: 'Due Tomorrow',
-                    subtaskTitles: [
-                      'Draft slides',
-                      'Add diagrams',
-                      'Rehearse speech',
-                      'Collect feedback',
-                    ],
-                  ),
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: docs.length,
+                    itemBuilder: (ctx, i) {
+                      final data = docs[i].data();
+                      // Parse timestamp → DateTime
+                      final dueTs = (data['due'] as Timestamp).toDate();
+                      final dueText = _formatDue(dueTs);
+                      // Pull out subtasks titles
+                      final subtasks = (data['subtasks'] as List<dynamic>?)
+                              ?.map((e) => e['title'] as String)
+                              .toList() ??
+                          [];
 
-                  // A task with 3 subtasks
-                  TaskWithSubtasksCard(
-                    title: 'Write Report',
-                    dueText: 'Due Friday',
-                    subtaskTitles: [
-                      'Outline structure',
-                      'Research sources',
-                      'Write draft',
-                    ],
-                  ),
-
-                  // You can add more cards here…
-                ],
+                      return TaskWithSubtasksCard(
+                        title: data['title'] as String,
+                        dueText: dueText,
+                        subtaskTitles: subtasks,
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  /// Smart formatting: “Due Today”, “Due Tomorrow”, “Due Wed”, or a date
+  String _formatDue(DateTime d) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final diff = d.difference(today).inDays;
+
+    if (diff == 0) return 'Due Today';
+    if (diff == 1) return 'Due Tomorrow';
+    if (diff > 1 && diff < 7) {
+      return 'Due ${DateFormat.E().format(d)}'; // e.g. “Due Wed”
+    }
+    return 'Due ${DateFormat.yMMMd().format(d)}';  // e.g. “Due Jan 5, 2025”
   }
 }
