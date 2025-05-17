@@ -13,10 +13,10 @@ class GroupChatScreen extends StatefulWidget {
   final int memberCount;
 
   const GroupChatScreen({
-    Key? key,
+    super.key,
     required this.groupName,
     required this.memberCount,
-  }) : super(key: key);
+  });
 
   @override
   State<GroupChatScreen> createState() => _GroupChatScreenState();
@@ -29,7 +29,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   final ImagePicker _imagePicker = ImagePicker();
 
   // Chat state
-  bool _isLoading = false;
+  final bool _isLoading = false;
   bool _isUploading = false;
   String? _errorMessage;
   final List<Map<String, dynamic>> _chatHistory = [

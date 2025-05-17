@@ -1,4 +1,3 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:circle_nav_bar/circle_nav_bar.dart';
 import 'package:group_chat_app/screens/group_details_screen.dart';
@@ -9,6 +8,8 @@ import 'package:group_chat_app/screens/tasks_page.dart';
 import 'package:group_chat_app/screens/select_members_page.dart';
 import 'package:group_chat_app/screens/create_task_page.dart';
 import 'package:group_chat_app/screens/profile_picture_page.dart';
+// ---- NEW IMPORT ----
+import 'package:group_chat_app/widgets/notifications_popup.dart';
 
 void main() => runApp(const MyApp());
 
@@ -57,6 +58,13 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedPage = 0;
 
+  // ---- Dummy notifications data ----
+  final List<Map<String, String>> _notifications = [
+    { 'title': 'New Assignment Posted', 'time': '2h ago' },
+    { 'title': 'Group "Flutter Devs" invited you', 'time': '5h ago' },
+    { 'title': 'Task "Write Lab Report" due soon', 'time': '1d ago' },
+  ];
+
   IconData get _centerIcon =>
       _selectedPage == 0 ? Icons.group_add : Icons.assignment_add;
 
@@ -76,6 +84,21 @@ class _MyHomePageState extends State<MyHomePage> {
         setState(() => _selectedPage = 1);
         break;
     }
+  }
+
+  // ---- This function shows the notifications popup ----
+  void _showNotificationsPopup() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF0E1213),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return NotificationsPopup(notifications: _notifications);
+      },
+    );
   }
 
   @override
@@ -147,7 +170,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: IconButton(
                   icon: const Icon(Icons.notifications_none),
                   color: Colors.white,
-                  onPressed: () {},
+                  onPressed: _showNotificationsPopup, // ← connected
                 ),
               ),
             ],
@@ -217,4 +240,4 @@ class _MyHomePageState extends State<MyHomePage> {
       ],
     );
   }
-} 
+}

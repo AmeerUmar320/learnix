@@ -104,7 +104,6 @@ class AppTheme {
     colorScheme: const ColorScheme.dark(
       primary: neonGreen,
       secondary: neonGreen,
-      background: darkCanvas,
       surface: darkGray,
     ),
     appBarTheme: const AppBarTheme(
@@ -143,8 +142,8 @@ class AppTheme {
       ),
     ),
     checkboxTheme: CheckboxThemeData(
-      fillColor: MaterialStateProperty.resolveWith<Color>((states) {
-        if (states.contains(MaterialState.selected)) {
+      fillColor: WidgetStateProperty.resolveWith<Color>((states) {
+        if (states.contains(WidgetState.selected)) {
           return neonGreen;
         }
         return lightGray;

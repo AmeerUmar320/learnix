@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:group_chat_app/widgets/task_card.dart';
 
 class TasksPage extends StatelessWidget {
-  const TasksPage({Key? key}) : super(key: key);
+  const TasksPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -33,29 +33,18 @@ class TasksPage extends StatelessWidget {
               child: ListView(
                 children: [
                   // A simple toggle task
-                  SimpleTaskCard(title: 'Read Chapter 1'),
+                  SimpleTaskCard(
+                    title: 'Read Chapter 4',
+                    dueText: 'Due: May 20, 5:00 PM',
+                    groupName: 'Flutter Devs',
+                  ),
 
                   // A task with 4 subtasks
                   TaskWithSubtasksCard(
-                    title: 'Prepare Presentation',
-                    dueText: 'Due Tomorrow',
-                    subtaskTitles: [
-                      'Draft slides',
-                      'Add diagrams',
-                      'Rehearse speech',
-                      'Collect feedback',
-                    ],
-                  ),
-
-                  // A task with 3 subtasks
-                  TaskWithSubtasksCard(
-                    title: 'Write Report',
-                    dueText: 'Due Friday',
-                    subtaskTitles: [
-                      'Outline structure',
-                      'Research sources',
-                      'Write draft',
-                    ],
+                    title: 'Write Lab Report',
+                    dueText: 'Due: May 22, 11:59 PM',
+                    subtaskTitles: ['Gather data', 'Analyze results', 'Draft discussion'],
+                    groupName: 'Algebra Buddies',
                   ),
 
                   // You can add more cards here…

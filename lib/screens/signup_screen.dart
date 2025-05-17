@@ -265,9 +265,9 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                                           _agreeToTerms = value ?? false;
                                         });
                                       },
-                                      fillColor: MaterialStateProperty.resolveWith<Color>(
-                                        (Set<MaterialState> states) {
-                                          if (states.contains(MaterialState.selected)) {
+                                      fillColor: WidgetStateProperty.resolveWith<Color>(
+                                        (Set<WidgetState> states) {
+                                          if (states.contains(WidgetState.selected)) {
                                             return accentColor;
                                           }
                                           return Colors.white24;

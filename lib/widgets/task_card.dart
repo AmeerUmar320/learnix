@@ -2,16 +2,20 @@
 import 'package:flutter/material.dart';
 
 /// ─────────────────────────────────────────────────────
-/// A simple “completed / not completed” task card.
-/// Manages its own isCompleted state internally.
+/// A simple “completed / not completed” task card,
+/// now displaying a due date/time.
 /// ─────────────────────────────────────────────────────
 class SimpleTaskCard extends StatefulWidget {
   final String title;
-  // **No longer const** – remove `const` here
-  SimpleTaskCard({
-    Key? key,
+  final String dueText;
+  final String groupName;
+
+  const SimpleTaskCard({
+    super.key,
+    required this.groupName,
     required this.title,
-  }) : super(key: key);
+    required this.dueText,
+  });
 
   @override
   State<SimpleTaskCard> createState() => _SimpleTaskCardState();
@@ -22,8 +26,9 @@ class _SimpleTaskCardState extends State<SimpleTaskCard> {
 
   @override
   Widget build(BuildContext context) {
-    const cardColor = Color(0xFF1A2323);
-    const accent    = Color(0xFFB5FB67);
+    const cardColor   = Color(0xFF1A2323);
+    const accentGreen = Color(0xFFB5FB67);
+    const textColor   = Colors.white70;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -32,27 +37,67 @@ class _SimpleTaskCardState extends State<SimpleTaskCard> {
         color: cardColor,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
+          // ← Group name now on its own line
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white12,
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Text(
-              widget.title,
+              widget.groupName,
               style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
+                color: textColor,
+                fontSize: 12,
               ),
             ),
           ),
-          GestureDetector(
-            onTap: () => setState(() => _isCompleted = !_isCompleted),
-            child: Icon(
-              _isCompleted
-                  ? Icons.check_circle
-                  : Icons.radio_button_unchecked,
-              color: _isCompleted ? accent : Colors.white54,
-              size: 28,
-            ),
+
+          const SizedBox(height: 8),
+
+          // Row for title + due + toggle
+          Row(
+            children: [
+              // Title & due stacked vertically
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.dueText,
+                      style: const TextStyle(
+                        color: textColor,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Completed toggle
+              GestureDetector(
+                onTap: () => setState(() => _isCompleted = !_isCompleted),
+                child: Icon(
+                  _isCompleted
+                    ? Icons.check_circle
+                    : Icons.radio_button_unchecked,
+                  color: _isCompleted ? accentGreen : Colors.white54,
+                  size: 28,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -60,23 +105,24 @@ class _SimpleTaskCardState extends State<SimpleTaskCard> {
   }
 }
 
+
 /// ─────────────────────────────────────────────────────
-/// A task card with any number of subtasks and a
-/// circular progress indicator computed dynamically.
-/// Manages its own subtasks state and progress internally.
+/// A task card with subtasks, animated circular progress,
+/// due date/time, and the originating group name.
 /// ─────────────────────────────────────────────────────
 class TaskWithSubtasksCard extends StatefulWidget {
+  final String groupName;
   final String title;
   final String dueText;
   final List<String> subtaskTitles;
 
   TaskWithSubtasksCard({
-    Key? key,
+    super.key,
+    required this.groupName,
     required this.title,
     required this.dueText,
     required this.subtaskTitles,
-  })  : assert(subtaskTitles.isNotEmpty, 'Provide at least one subtask'),
-        super(key: key);
+  })  : assert(subtaskTitles.isNotEmpty, 'Provide at least one subtask');
 
   @override
   State<TaskWithSubtasksCard> createState() => _TaskWithSubtasksCardState();
@@ -109,47 +155,72 @@ class _TaskWithSubtasksCardState extends State<TaskWithSubtasksCard> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top row: title, due, animated progress circle
+          // Group name badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white12,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              widget.groupName,
+              style: const TextStyle(
+                color: subColor,
+                fontSize: 12,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // Top row: title, due, animated progress
           Row(
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.title,
-                        style: const TextStyle(
-                            color: textColor,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600)),
+                    Text(
+                      widget.title,
+                      style: const TextStyle(
+                        color: textColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text(widget.dueText,
-                        style: const TextStyle(
-                            color: subColor, fontSize: 13)),
+                    Text(
+                      widget.dueText,
+                      style: const TextStyle(
+                        color: subColor,
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                 ),
               ),
 
-              // Animated progress indicator
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween<double>(begin: 0, end: _progress),
-                  duration: const Duration(milliseconds: 300),
-                  builder: (context, animatedProgress, child) {
-                    final percent = (animatedProgress * 100).round();
-                    return Stack(
+              // Animated circular progress
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: _progress),
+                duration: const Duration(milliseconds: 400),
+                builder: (context, value, child) {
+                  return SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Stack(
                       alignment: Alignment.center,
                       children: [
                         CircularProgressIndicator(
-                          value: animatedProgress,
+                          value: value,
                           strokeWidth: 4,
                           color: accentGreen,
                           backgroundColor: Colors.white12,
                         ),
                         Text(
-                          '$percent%',
+                          '${(value * 100).round()}%',
                           style: const TextStyle(
                             color: accentGreen,
                             fontSize: 12,
@@ -157,9 +228,9 @@ class _TaskWithSubtasksCardState extends State<TaskWithSubtasksCard> {
                           ),
                         ),
                       ],
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
               ),
             ],
           ),

@@ -233,9 +233,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                               _rememberMe = value ?? false;
                                             });
                                           },
-                                          fillColor: MaterialStateProperty.resolveWith<Color>(
-                                            (Set<MaterialState> states) {
-                                              if (states.contains(MaterialState.selected)) {
+                                          fillColor: WidgetStateProperty.resolveWith<Color>(
+                                            (Set<WidgetState> states) {
+                                              if (states.contains(WidgetState.selected)) {
                                                 return accentColor;
                                               }
                                               return Colors.white24;
