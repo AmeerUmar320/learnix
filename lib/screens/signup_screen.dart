@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../blocs/auth/auth_bloc.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -17,28 +19,27 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
-  
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  
+
   @override
   void initState() {
     super.initState();
-    
-    // Set up animations
+
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
       ),
     );
-    
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.35),
       end: Offset.zero,
@@ -48,11 +49,10 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
         curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
       ),
     );
-    
-    // Start the animation
+
     _animationController.forward();
   }
-  
+
   @override
   void dispose() {
     _animationController.dispose();
@@ -63,20 +63,35 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     super.dispose();
   }
 
-  // Navigate to main screen after successful signup
-  void _navigateToMainScreen() {
-    // In a real app, you would validate and create the account here
-    
-    // Navigate to the main screen (same as login)
-    Navigator.pushNamedAndRemoveUntil(context, '/profile_picture', (route) => false);
+  void _onSignupPressed() {
+    if (_nameController.text.isEmpty || _emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please fill all fields")));
+      return;
+    }
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Passwords do not match")));
+      return;
+    }
+    if (!_agreeToTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("You must agree to terms")));
+      return;
+    }
+    // Pass signup info to BLoC, move to profile picture page
+    context.read<AuthBloc>().add(
+      SignupInfoEntered(
+        _nameController.text,
+        _emailController.text,
+        _passwordController.text,
+      ),
+    );
+    Navigator.pushNamed(context, '/profile_picture');
   }
 
   @override
   Widget build(BuildContext context) {
-    // Colors
     const bgColor = Color(0xFF0E1213);
     const accentColor = Color(0xFFB5FB67);
-    
+
     return Scaffold(
       backgroundColor: bgColor,
       body: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -110,8 +125,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                   ),
                 ),
               ),
-              
-              // Main content
               SafeArea(
                 child: Center(
                   child: SingleChildScrollView(
@@ -135,7 +148,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                                 onPressed: () => Navigator.pop(context),
                               ),
                             ),
-                            
                             // Logo and app name
                             Hero(
                               tag: 'app_logo',
@@ -189,7 +201,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                               ),
                             ),
                             const SizedBox(height: 30),
-                            
                             // Name field
                             _buildTextField(
                               controller: _nameController,
@@ -197,7 +208,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                               prefixIcon: Icons.person_outline,
                             ),
                             const SizedBox(height: 16),
-                            
                             // Email field
                             _buildTextField(
                               controller: _emailController,
@@ -206,7 +216,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                               keyboardType: TextInputType.emailAddress,
                             ),
                             const SizedBox(height: 16),
-                            
                             // Password field
                             _buildTextField(
                               controller: _passwordController,
@@ -215,8 +224,8 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                               obscureText: _obscurePassword,
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscurePassword 
-                                      ? Icons.visibility_outlined 
+                                  _obscurePassword
+                                      ? Icons.visibility_outlined
                                       : Icons.visibility_off_outlined,
                                   color: Colors.white70,
                                 ),
@@ -228,7 +237,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                               ),
                             ),
                             const SizedBox(height: 16),
-                            
                             // Confirm Password field
                             _buildTextField(
                               controller: _confirmPasswordController,
@@ -237,8 +245,8 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                               obscureText: _obscureConfirmPassword,
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscureConfirmPassword 
-                                      ? Icons.visibility_outlined 
+                                  _obscureConfirmPassword
+                                      ? Icons.visibility_outlined
                                       : Icons.visibility_off_outlined,
                                   color: Colors.white70,
                                 ),
@@ -249,7 +257,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                                 },
                               ),
                             ),
-                            
                             // Terms and conditions
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -315,14 +322,12 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                               ),
                             ),
                             const SizedBox(height: 24),
-                            
                             // Sign Up button
                             _buildGlowingButton(
                               text: 'SIGN UP',
-                              onPressed: _navigateToMainScreen,
+                              onPressed: _onSignupPressed,
                             ),
                             const SizedBox(height: 30),
-                            
                             // OR divider
                             Row(
                               children: [
@@ -351,7 +356,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                               ],
                             ),
                             const SizedBox(height: 30),
-                            
                             // Social signup options
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -373,7 +377,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                               ],
                             ),
                             const SizedBox(height: 40),
-                            
                             // Login option
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -412,7 +415,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
       ),
     );
   }
-  
+
   Widget _buildTextField({
     required TextEditingController controller,
     required String hintText,
@@ -455,13 +458,13 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
       ),
     );
   }
-  
+
   Widget _buildGlowingButton({
     required String text,
     required VoidCallback onPressed,
   }) {
     const accentColor = Color(0xFFB5FB67);
-    
+
     return Container(
       width: double.infinity,
       height: 55,
@@ -496,7 +499,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
       ),
     );
   }
-  
+
   Widget _buildSocialButton({
     required IconData icon,
     required VoidCallback onPressed,

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// A single “group chat” card, mimicking your bills UI.
 class GroupCard extends StatelessWidget {
-  final String imageAsset;
+  final String? imageUrl; // Can be null or asset/network
   final String name;
   final String subject;
   final String lastMessageTime;
@@ -10,7 +9,7 @@ class GroupCard extends StatelessWidget {
 
   const GroupCard({
     super.key,
-    required this.imageAsset,
+    this.imageUrl,
     required this.name,
     required this.subject,
     required this.lastMessageTime,
@@ -33,12 +32,32 @@ class GroupCard extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(24),
-              child: Image.asset(
-                imageAsset,
-                width: 48,
-                height: 48,
-                fit: BoxFit.cover,
-              ),
+              child: imageUrl == null
+                  ? Image.asset(
+                      'assets/calc.png',
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.cover,
+                    )
+                  : imageUrl!.startsWith('http')
+                      ? Image.network(
+                          imageUrl!,
+                          width: 48,
+                          height: 48,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Image.asset(
+                            'assets/calc.png',
+                            width: 48,
+                            height: 48,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : Image.asset(
+                          imageUrl!,
+                          width: 48,
+                          height: 48,
+                          fit: BoxFit.cover,
+                        ),
             ),
             const SizedBox(width: 12),
             Expanded(

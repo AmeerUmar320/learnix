@@ -1,8 +1,13 @@
-// lib/screens/home_page.dart
 import 'package:flutter/material.dart';
-import 'package:group_chat_app/widgets/group_card.dart';
-import 'package:group_chat_app/widgets/search_assistant_row.dart';
-import 'package:group_chat_app/screens/group_chat_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../blocs/group/group_bloc.dart';
+import '../blocs/group/group_event.dart';
+import '../blocs/group/group_state.dart';
+import '../widgets/group_card.dart';
+import 'group_chat_screen.dart';
+import '../models/group_model.dart';
+import '../widgets/search_assistant_row.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,18 +16,40 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  static const bgColor = Color(0xFF0E1213);
+  int? userId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserAndFetchGroups();
+  }
+
+  void _loadUserAndFetchGroups() async {
+    final prefs = await SharedPreferences.getInstance();
+    final uid = prefs.getInt('userId');
+    if (uid != null) {
+      setState(() {
+        userId = uid;
+      });
+      context.read<GroupBloc>().add(FetchGroupsForUser(uid));
+    }
+  }
+
+  Future<void> _refresh() async {
+    if (userId != null) {
+      context.read<GroupBloc>().add(FetchGroupsForUser(userId!));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: const Color(0xFF0E1213),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SearchAssistantRow(),
-
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Text(
@@ -34,66 +61,59 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-
             Expanded(
-              child: ListView(
-                children: [
-                  GroupCard(
-                    imageAsset: 'assets/calc.png',
-                    name: 'Algebra Buddies',
-                    subject: 'Math',
-                    lastMessageTime: '2:45 PM',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const GroupChatScreen(
-                            groupName: 'Algebra Buddies',
-                            memberCount: 4,
-                          ),
+              child: BlocBuilder<GroupBloc, GroupState>(
+                builder: (context, state) {
+                  if (state is GroupLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (state is GroupsLoaded) {
+                    final List<GroupModel> groups = state.groups;
+                    if (groups.isEmpty) {
+                      return const Center(
+                        child: Text(
+                          'You are not part of any groups.',
+                          style: TextStyle(color: Colors.white54),
                         ),
                       );
-                    },
-                  ),
-
-                  GroupCard(
-                    imageAsset: 'assets/calc.png',
-                    name: 'OOP Enthusiasts',
-                    subject: 'OOP',
-                    lastMessageTime: '1:15 PM',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const GroupChatScreen(
-                            groupName: 'OOP Enthusiasts',
-                            memberCount: 6,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-
-                  GroupCard(
-                    imageAsset: 'assets/calc.png',
-                    name: 'Flutter Devs',
-                    subject: 'Mobile Dev',
-                    lastMessageTime: 'Yesterday',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const GroupChatScreen(
-                            groupName: 'Flutter Devs',
-                            memberCount: 5,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-
-                  // …add more GroupCard() items here, each with its own groupName & memberCount
-                ],
+                    }
+                    return RefreshIndicator(
+                      onRefresh: _refresh,
+                      child: ListView.builder(
+                        itemCount: groups.length,
+                        itemBuilder: (context, i) {
+                          final group = groups[i];
+                          return GroupCard(
+  imageUrl: group.profilePictureUrl != null && group.profilePictureUrl!.isNotEmpty
+      ? 'http://192.168.100.28:5241${group.profilePictureUrl!}'
+      : null,
+  name: group.name,
+  subject: group.description ?? 'No subject',
+  lastMessageTime: '—',
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => GroupChatScreen(
+          groupName: group.name,
+          memberCount: 1, // For now, use dummy. Later, fetch real member count.
+        ),
+      ),
+    );
+  },
+);
+                        },
+                      ),
+                    );
+                  } else if (state is GroupFailure) {
+                    return Center(
+                      child: Text(
+                        'Error: ${state.error}',
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    );
+                  }
+                  return const Center(child: CircularProgressIndicator());
+                },
               ),
             ),
           ],

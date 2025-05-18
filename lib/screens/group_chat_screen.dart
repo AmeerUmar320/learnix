@@ -1,4 +1,3 @@
-// lib/screens/group_chat_screen.dart
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -6,10 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/services.dart';
 
 class GroupChatScreen extends StatefulWidget {
-  /// The name of the group (e.g. "Algebra Buddies")
   final String groupName;
-
-  /// How many members are in the group
   final int memberCount;
 
   const GroupChatScreen({
@@ -23,12 +19,10 @@ class GroupChatScreen extends StatefulWidget {
 }
 
 class _GroupChatScreenState extends State<GroupChatScreen> {
-  // Controllers
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ImagePicker _imagePicker = ImagePicker();
 
-  // Chat state
   final bool _isLoading = false;
   bool _isUploading = false;
   String? _errorMessage;
@@ -40,10 +34,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       'content': 'Hey everyone! How\'s the project coming along?',
       'timestamp': '10:30 AM',
     },
-    // … your other initial messages …
+    // ... other initial messages ...
   ];
 
-  // Color scheme
   static const Color _bgColor = Color(0xFF0E1213);
   static const Color _otherBubbleColor = Color(0xFF2E3B3B);
   static const Color _userBubbleColor = Color(0xFFB5FB67);
@@ -55,7 +48,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   @override
   void initState() {
     super.initState();
-    // Scroll to bottom once messages are laid out
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
@@ -84,8 +76,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       _chatHistory.add({
         'role': 'user',
         'content': msg,
-        'timestamp':
-            '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}'
+        'timestamp': '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}'
             ' ${DateTime.now().hour >= 12 ? 'PM' : 'AM'}',
       });
     });
@@ -95,7 +86,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   }
 
   Future<void> _showImageSourceOptions() async {
-    // Clear any previous error messages
     setState(() {
       _errorMessage = null;
     });
@@ -145,32 +135,26 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       );
 
       if (pickedFile == null) {
-        // User canceled the picker
         setState(() {
           _isUploading = false;
         });
         return;
       }
 
-      // Here you would typically upload the image to your server
-      // For this example, we'll just simulate a successful upload
-      
-      // Simulate processing delay
       await Future.delayed(const Duration(milliseconds: 800));
 
       setState(() {
         _chatHistory.add({
           'role': 'user',
           'content': 'Check out this image!',
-          'timestamp':
-              '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}'
+          'timestamp': '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}'
               ' ${DateTime.now().hour >= 12 ? 'PM' : 'AM'}',
           'image': pickedFile.path,
-          'isLocalImage': true, // Flag to indicate this is a local file path
+          'isLocalImage': true,
         });
         _isUploading = false;
       });
-      
+
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } on PlatformException catch (e) {
       setState(() {
@@ -205,7 +189,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   }
 
   void _navigateToGroupDetails() {
-    // Use the correct route name from main.dart
     Navigator.pushNamed(
       context,
       '/group_details',
@@ -235,12 +218,10 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Dynamic group name
                 Text(
                   widget.groupName,
                   style: const TextStyle(color: _textColor, fontSize: 16),
                 ),
-                // Dynamic member count
                 Text(
                   '${widget.memberCount} members',
                   style: TextStyle(
@@ -262,7 +243,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       ),
       body: Column(
         children: [
-          // Error message display
           if (_errorMessage != null)
             Container(
               width: double.infinity,
@@ -273,8 +253,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                 style: const TextStyle(color: Colors.white),
               ),
             ),
-            
-          // Message list
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
@@ -288,17 +266,14 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                 final isLocalImage = msg['isLocalImage'] == true;
                 final isContinuation = i > 0 &&
                     _chatHistory[i - 1]['role'] == msg['role'] &&
-                    (!isUser &&
-                        _chatHistory[i - 1]['sender'] == msg['sender']);
-
+                    (!isUser && _chatHistory[i - 1]['sender'] == msg['sender']);
                 return Padding(
                   padding: EdgeInsets.only(
                     top: isContinuation ? 4 : 12,
                     bottom: 4,
                   ),
                   child: Row(
-                    mainAxisAlignment:
-                        isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                    mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (!isUser && !isContinuation) ...[
@@ -335,10 +310,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                             decoration: BoxDecoration(
                               color: isUser ? _userBubbleColor : _otherBubbleColor,
                               borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(
-                                    isContinuation && !isUser ? 16 : 16),
-                                topRight: Radius.circular(
-                                    isContinuation && isUser ? 16 : 16),
+                                topLeft: Radius.circular(16),
+                                topRight: Radius.circular(16),
                                 bottomLeft: Radius.circular(isUser ? 16 : 4),
                                 bottomRight: Radius.circular(isUser ? 4 : 16),
                               ),
@@ -396,8 +369,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(
-                                top: 4, left: 4, right: 4),
+                            padding: const EdgeInsets.only(top: 4, left: 4, right: 4),
                             child: Text(
                               msg['timestamp'],
                               style: TextStyle(
@@ -414,8 +386,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               },
             ),
           ),
-
-          // Upload indicator
           if (_isUploading)
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -438,8 +408,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                 ],
               ),
             ),
-
-          // Input area
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             color: _otherBubbleColor,
@@ -493,7 +461,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                     ),
                     child: Center(
                       child: Transform.rotate(
-                        angle: -math.pi / 6, // 30° CCW
+                        angle: -math.pi / 6,
                         child: const Icon(Icons.send, color: _bgColor),
                       ),
                     ),

@@ -1,20 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:group_chat_app/theme.dart';
 import 'package:group_chat_app/widgets/common_widgets.dart';
-
-class Contact {
-  final String name;
-  final String email;
-  final String? avatarUrl;
-  bool isSelected;
-
-  Contact({
-    required this.name,
-    required this.email,
-    this.avatarUrl,
-    this.isSelected = false,
-  });
-}
+import '../models/contact_model.dart';
 
 class AddMembersPage extends StatefulWidget {
   const AddMembersPage({super.key});

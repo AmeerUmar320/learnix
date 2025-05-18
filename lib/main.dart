@@ -1,53 +1,79 @@
-import 'package:flutter/material.dart';
 import 'package:circle_nav_bar/circle_nav_bar.dart';
-import 'package:group_chat_app/screens/group_details_screen.dart';
-import 'package:group_chat_app/screens/login_screen.dart';
-import 'package:group_chat_app/screens/signup_screen.dart';
-import 'package:group_chat_app/screens/home_page.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:group_chat_app/screens/tasks_page.dart';
-import 'package:group_chat_app/screens/select_members_page.dart';
-import 'package:group_chat_app/screens/create_task_page.dart';
-import 'package:group_chat_app/screens/profile_picture_page.dart';
-// ---- NEW IMPORT ----
-import 'package:group_chat_app/widgets/notifications_popup.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'screens/login_screen.dart';
+import 'screens/signup_screen.dart';
+import 'screens/profile_picture_page.dart';
+import 'screens/home_page.dart';
+import 'screens/select_members_page.dart';
+import 'screens/create_task_page.dart';
+import 'screens/group_details_screen.dart';
+import 'repositories/auth_repository.dart';
+import 'blocs/auth/auth_bloc.dart';
+import 'blocs/group/group_bloc.dart';
+import 'repositories/group_repository.dart';
+import 'screens/group_info_page.dart';
 
-void main() => runApp(const MyApp());
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  final loggedIn = prefs.getBool('loggedIn') ?? false;
+  runApp(MyApp(loggedIn: loggedIn));
+}
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool loggedIn;
+  const MyApp({super.key, required this.loggedIn});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Learnix',
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF0E1213),
-        primaryColor: const Color(0xFFB5FB67),
-        colorScheme: ColorScheme.dark(
-          primary: const Color(0xFFB5FB67),
-          secondary: const Color(0xFFB5FB67),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => AuthBloc(AuthRepository()),
         ),
-      ),
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const LoginScreen(),
-        '/signup': (context) => const SignupScreen(),
-        '/profile_picture': (context) => const ProfilePicturePage(),
-        '/home': (context) => const MyHomePage(),
-        '/select_members': (context) => const SelectMembersPage(),
-        '/create_task': (context) => const CreateTaskPage(),
-        '/group_details': (context) {
-          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-          return GroupDetailsScreen(
-            groupName: args?['groupName'] ?? '',
-            subject: args?['subject'] ?? '',
-            imageAsset: args?['imageAsset'] ?? 'assets/profiles/profile_7.jpg',
-          );
+        BlocProvider(
+          create: (context) => GroupBloc(GroupRepository()),
+        ),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Learnix',
+        theme: ThemeData.dark().copyWith(
+          scaffoldBackgroundColor: const Color(0xFF0E1213),
+          primaryColor: const Color(0xFFB5FB67),
+          colorScheme: ColorScheme.dark(
+            primary: const Color(0xFFB5FB67),
+            secondary: const Color(0xFFB5FB67),
+          ),
+        ),
+        initialRoute: loggedIn ? '/home' : '/',
+        routes: {
+          '/': (context) => const LoginScreen(),
+          '/signup': (context) => const SignupScreen(),
+          '/profile_picture': (context) => const ProfilePicturePage(),
+          '/home': (context) => const MyHomePage(),
+          '/select_members': (context) => const SelectMembersPage(),
+          '/create_task': (context) => const CreateTaskPage(),
+          '/group_details': (context) {
+            final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+            return GroupDetailsScreen(
+              groupName: args?['groupName'] ?? '',
+              subject: args?['subject'] ?? '',
+              imageAsset: args?['imageAsset'] ?? 'assets/profiles/profile_7.jpg',
+            );
+          },
+          '/group_info': (context) => const GroupInfoPage(selectedUsers: []),
         },
-      },
+      ),
     );
   }
 }
+
+// ---- HOME PAGE WITH LOGOUT BUTTON IN APPBAR ----
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -57,8 +83,24 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedPage = 0;
+  String? _userName;
+  String? _profilePictureUrl;
 
-  // ---- Dummy notifications data ----
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userName = prefs.getString('userName');
+      _profilePictureUrl = prefs.getString('profilePictureUrl');
+    });
+  }
+
+  // Dummy notifications data
   final List<Map<String, String>> _notifications = [
     { 'title': 'New Assignment Posted', 'time': '2h ago' },
     { 'title': 'Group "Flutter Devs" invited you', 'time': '5h ago' },
@@ -86,7 +128,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  // ---- This function shows the notifications popup ----
   void _showNotificationsPopup() {
     showModalBottomSheet(
       context: context,
@@ -96,9 +137,31 @@ class _MyHomePageState extends State<MyHomePage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
-        return NotificationsPopup(notifications: _notifications);
+        // If you have a NotificationsPopup widget, use it here
+        // Otherwise, show a simple list
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          shrinkWrap: true,
+          children: _notifications.map((notif) {
+            return ListTile(
+              title: Text(notif['title']!, style: const TextStyle(color: Colors.white)),
+              subtitle: Text(notif['time']!, style: const TextStyle(color: Colors.white54)),
+            );
+          }).toList(),
+        );
       },
     );
+  }
+
+  // ---- REAL LOGOUT FUNCTIONALITY ----
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('loggedIn', false);
+    await prefs.remove('userId');
+    await prefs.remove('userName');
+    await prefs.remove('profilePictureUrl');
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
   }
 
   @override
@@ -112,10 +175,14 @@ class _MyHomePageState extends State<MyHomePage> {
     final leftColor = _selectedPage == 0 ? circleBg : inactiveColor;
     final rightColor = _selectedPage == 1 ? circleBg : inactiveColor;
 
-    // sizes must match your CircleNavBar settings:
     final circleSize = 60.0;
     final navHeight = 60.0;
     final screenW = MediaQuery.of(context).size.width;
+
+    // Replace this with your real API base (so the url is always correct)
+    String? profilePicUrl = _profilePictureUrl != null && _profilePictureUrl!.isNotEmpty
+        ? 'http://192.168.100.28:5241${_profilePictureUrl!}' // use your server's IP/host here!
+        : null;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -130,24 +197,26 @@ class _MyHomePageState extends State<MyHomePage> {
             titleSpacing: 16,
             title: Row(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 24,
-                  backgroundImage: AssetImage('assets/profile (7).jpg'),
+                  backgroundImage: profilePicUrl != null
+                    ? NetworkImage(profilePicUrl)
+                    : const AssetImage('assets/profile (7).jpg') as ImageProvider,
                 ),
                 const SizedBox(width: 12),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
-                      'Hey, Emilyxox',
-                      style: TextStyle(
+                      _userName != null && _userName!.isNotEmpty ? 'Hey, $_userName' : 'Hey!',
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(
+                    const Text(
                       'Welcome back!',
                       style: TextStyle(
                         color: Colors.white70,
@@ -159,8 +228,9 @@ class _MyHomePageState extends State<MyHomePage> {
               ],
             ),
             actions: [
+              // Notifications icon
               Container(
-                margin: const EdgeInsets.only(right: 16),
+                margin: const EdgeInsets.only(right: 8),
                 width: 40,
                 height: 40,
                 decoration: const BoxDecoration(
@@ -170,12 +240,28 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: IconButton(
                   icon: const Icon(Icons.notifications_none),
                   color: Colors.white,
-                  onPressed: _showNotificationsPopup, // ← connected
+                  onPressed: _showNotificationsPopup,
+                ),
+              ),
+              // Logout button (top right)
+              Container(
+                margin: const EdgeInsets.only(right: 16),
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
+                  color: Color.fromARGB(77, 131, 118, 118),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.logout),
+                  color: Colors.white,
+                  tooltip: 'Logout',
+                  onPressed: _logout,
                 ),
               ),
             ],
           ),
-
+          // ---- Your Bottom Navigation ----
           bottomNavigationBar: CircleNavBar(
             color: navBg,
             padding: EdgeInsets.zero,
@@ -215,7 +301,6 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ],
           ),
-
           body: IndexedStack(
             index: _selectedPage,
             children: const [
@@ -224,7 +309,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           ),
         ),
-
         // Full-circle touch layer
         Positioned(
           bottom: navHeight - (circleSize / 2),
