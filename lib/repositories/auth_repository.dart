@@ -49,9 +49,23 @@ class AuthRepository {
     );
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return UserModel.fromJson(data);
+      // Add robust null-handling here:
+      return UserModel.fromJson({
+        'id': data['id'] ?? 0,
+        'name': data['name'] ?? '',
+        'email': data['email'] ?? '',
+        'profilePictureUrl': data['profilePictureUrl'] ?? '',
+      });
     } else {
-      throw Exception('Failed to login: ${response.body}');
+      // Try to extract error message if possible
+      String err = 'Failed to login: ';
+      try {
+        final Map<String, dynamic> jsonErr = json.decode(response.body);
+        err += jsonErr['error']?.toString() ?? response.body;
+      } catch (_) {
+        err += response.body;
+      }
+      throw Exception(err);
     }
   }
 
@@ -81,6 +95,4 @@ class AuthRepository {
       throw Exception('Failed to register: ${response.statusCode}');
     }
   }
-
-
 }

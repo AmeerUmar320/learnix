@@ -76,7 +76,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('loggedIn', true);
       await prefs.setInt('userId', state.user.id);
-      await prefs.setString('userName', state.user.name ?? '');
+      // Use '' as fallback for nullable fields
+      await prefs.setString('userName', state.user.name.isNotEmpty ? state.user.name : '');
       await prefs.setString('profilePictureUrl', state.user.profilePictureUrl ?? '');
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/home');

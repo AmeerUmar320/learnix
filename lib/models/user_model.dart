@@ -1,4 +1,3 @@
-// models/user_model.dart
 class UserModel {
   final int id;
   final String name;
@@ -15,9 +14,11 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-        id: json['id'],
-        name: json['name'],
-        email: json['email'],
-        profilePictureUrl: json['profilePictureUrl'],
+        id: json['id'] is int
+            ? json['id']
+            : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+        name: json['name'] ?? '',
+        email: json['email'] ?? '',
+        profilePictureUrl: json['profilePictureUrl']?.toString(),
       );
 }

@@ -35,9 +35,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           password: password!,
           imageBytes: imageBytes!,
         );
-        // Cache user data
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('userName', user.name ?? '');
+        await prefs.setString('userName', user.name);
         await prefs.setString('profilePictureUrl', user.profilePictureUrl ?? '');
         emit(AuthSuccess(user));
       } catch (e) {
@@ -52,10 +51,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           email: event.email,
           password: event.password,
         );
-        // Cache user data
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('userName', user.name ?? '');
+        await prefs.setString('userName', user.name);
         await prefs.setString('profilePictureUrl', user.profilePictureUrl ?? '');
+        await prefs.setInt('userId', user.id);
         emit(AuthSuccess(user));
       } catch (e) {
         emit(AuthFailure(e.toString()));
@@ -71,9 +70,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           password: password!,
           imageFile: event.imageFile,
         );
-        // Cache user data
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('userName', user.name ?? '');
+        await prefs.setString('userName', user.name);
         await prefs.setString('profilePictureUrl', user.profilePictureUrl ?? '');
         emit(AuthSuccess(user));
       } catch (e) {
