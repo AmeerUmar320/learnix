@@ -1,6 +1,8 @@
 import 'package:circle_nav_bar/circle_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:group_chat_app/blocs/task/task_bloc.dart';
+import 'package:group_chat_app/repositories/task_repository.dart';
 import 'package:group_chat_app/screens/tasks_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/login_screen.dart';
@@ -37,6 +39,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider(
           create: (context) => GroupBloc(GroupRepository()),
+        ),
+        BlocProvider(
+          create: (context) => TaskBloc(TaskRepository()),
         ),
       ],
       child: MaterialApp(
