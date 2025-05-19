@@ -89,21 +89,22 @@ class _SelectMembersPageState extends State<SelectMembersPage> {
                 ),
                 const SizedBox(height: 8),
                 SizedBox(
-                  height: 60,
+                  height: 75,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: selectedUsers.length,
                     itemBuilder: (context, index) {
                       final user = selectedUsers[index];
                       return Padding(
-                        padding: const EdgeInsets.only(right: 12.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         child: Column(
                           children: [
                             Stack(
+                              clipBehavior: Clip.none,
                               children: [
                                 CircleAvatar(
                                   radius: 20,
-                                  backgroundColor: AppTheme.mediumGray,
+                                  backgroundColor: const Color.fromARGB(255, 58, 65, 70),
                                   backgroundImage: user.profilePictureUrl != null
                                       ? NetworkImage('http://192.168.100.28:5241${user.profilePictureUrl!}')
                                       : null,
@@ -117,9 +118,10 @@ class _SelectMembersPageState extends State<SelectMembersPage> {
                                         )
                                       : null,
                                 ),
+                                // Close icon "inside" avatar, perfectly aligned, no overflow
                                 Positioned(
-                                  right: -4,
-                                  top: -4,
+                                  right: 1,
+                                  top: 1,
                                   child: GestureDetector(
                                     onTap: () {
                                       setState(() {
@@ -127,7 +129,8 @@ class _SelectMembersPageState extends State<SelectMembersPage> {
                                       });
                                     },
                                     child: Container(
-                                      padding: const EdgeInsets.all(2),
+                                      width: 16,
+                                      height: 16,
                                       decoration: const BoxDecoration(
                                         color: Colors.red,
                                         shape: BoxShape.circle,
