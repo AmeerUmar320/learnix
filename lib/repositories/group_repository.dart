@@ -124,4 +124,22 @@ class GroupRepository {
       await http.delete(Uri.parse('$baseUrl/groupmemberships/$userId/$groupId'));
     }
   }
+
+  Future<List<Map<String, dynamic>>> fetchGroupMembersWithRoles(int groupId) async {
+    final response = await http.get(Uri.parse('$baseUrl/groupmemberships'));
+    if (response.statusCode == 200) {
+      final List<dynamic> allMemberships = jsonDecode(response.body);
+      // Filter for the given groupId
+      final members = allMemberships
+          .where((m) => m['groupId'] == groupId && m['user'] != null)
+          .map((m) => {
+                'user': UserModel.fromJson(m['user']),
+                'role': m['role'],
+              })
+          .toList();
+      return members;
+    } else {
+      throw Exception('Failed to load group members');
+    }
+  }
 }
