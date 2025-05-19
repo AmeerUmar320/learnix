@@ -142,4 +142,19 @@ class GroupRepository {
       throw Exception('Failed to load group members');
     }
   }
+
+  Future<void> addUserToGroup(int userId, int groupId, {int role = 0}) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/groupmemberships'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'userId': userId,
+        'groupId': groupId,
+        'role': role,
+      }),
+    );
+    if (response.statusCode != 201 && response.statusCode != 200) {
+      throw Exception('Failed to add user to group (${response.body})');
+    }
+  }
 }

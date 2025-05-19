@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/group_model.dart';
 import '../models/user_model.dart';
 import '../repositories/group_repository.dart';
+import 'package:group_chat_app/screens/add_members.dart';
 
 class GroupDetailsScreen extends StatefulWidget {
   final GroupModel group;
@@ -27,11 +28,13 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   Future<void> _fetchMembers() async {
     try {
       final members = await GroupRepository().fetchGroupMembersWithRoles(widget.group.id);
+      if (!mounted) return;
       setState(() {
         _members = members;
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _members = [];
         _loading = false;
@@ -148,8 +151,16 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                         icon: const Icon(Icons.person_add_alt_1, color: GroupDetailsScreen.accentColor),
                         label: const Text('Add Members', style: TextStyle(color: GroupDetailsScreen.accentColor)),
                         style: OutlinedButton.styleFrom(side: const BorderSide(color: GroupDetailsScreen.accentColor)),
-                        onPressed: () {
-                          // TODO: Implement add members logic/navigation
+                        onPressed: () async {
+                          final refresh = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => AddMembersPage(group: widget.group),
+                            ),
+                          );
+                          if (refresh == true) {
+                            _fetchMembers();
+                          }
                         },
                       ),
                     ),
@@ -159,8 +170,45 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                         icon: const Icon(Icons.exit_to_app, color: Colors.redAccent),
                         label: const Text('Leave Group', style: TextStyle(color: Colors.redAccent)),
                         style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.redAccent)),
-                        onPressed: () {
-                          // TODO: Implement leave group logic/navigation
+                        onPressed: () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              backgroundColor: const Color(0xFF181D1F),
+                              title: const Text('Leave Group', style: TextStyle(color: Colors.white)),
+                              content: const Text(
+                                'Are you sure you want to leave this group?',
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Leave', style: TextStyle(color: Colors.redAccent)),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirmed == true) {
+                            try {
+                              // Optionally show a loading dialog/spinner here if desired
+                              await GroupRepository().removeCurrentUserFromGroup(widget.group.id);
+                              if (!mounted) return;
+                              // Go to home and remove all previous routes
+                              Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                              // Optionally show a snackbar on home
+                              // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('You left the group.')));
+                            } catch (e) {
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text('Error leaving group: $e'),
+                                backgroundColor: Colors.redAccent,
+                              ));
+                            }
+                          }
                         },
                       ),
                     ),

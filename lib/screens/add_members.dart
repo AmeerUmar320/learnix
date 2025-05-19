@@ -1,217 +1,174 @@
 import 'package:flutter/material.dart';
-import 'package:group_chat_app/theme.dart';
-import 'package:group_chat_app/widgets/common_widgets.dart';
-import '../models/contact_model.dart';
+import '../models/user_model.dart';
+import '../models/group_model.dart';
+import '../repositories/group_repository.dart';
 
 class AddMembersPage extends StatefulWidget {
-  const AddMembersPage({super.key});
+  final GroupModel group;
+  const AddMembersPage({super.key, required this.group});
 
   @override
   State<AddMembersPage> createState() => _AddMembersPageState();
 }
 
 class _AddMembersPageState extends State<AddMembersPage> {
+  List<UserModel> _allUsers = [];
+  List<UserModel> _selected = [];
+  bool _loading = true;
   final TextEditingController _searchController = TextEditingController();
-  final List<Contact> _allContacts = [
-    Contact(name: 'Alex Johnson', email: 'alex@example.com'),
-    Contact(name: 'Jamie Smith', email: 'jamie@example.com'),
-    Contact(name: 'Taylor Brown', email: 'taylor@example.com'),
-    Contact(name: 'Morgan Davis', email: 'morgan@example.com'),
-    Contact(name: 'Casey Wilson', email: 'casey@example.com'),
-    Contact(name: 'Jordan Miller', email: 'jordan@example.com'),
-    Contact(name: 'Riley Moore', email: 'riley@example.com'),
-    Contact(name: 'Quinn Thomas', email: 'quinn@example.com'),
-    Contact(name: 'Avery Martinez', email: 'avery@example.com'),
-    Contact(name: 'Reese Anderson', email: 'reese@example.com'),
-  ];
-  List<Contact> _filteredContacts = [];
+  List<UserModel> _filtered = [];
 
   @override
   void initState() {
     super.initState();
-    _filteredContacts = List.from(_allContacts);
-    _searchController.addListener(_filterContacts);
+    _fetchUsers();
   }
 
-  @override
-  void dispose() {
-    _searchController.removeListener(_filterContacts);
-    _searchController.dispose();
-    super.dispose();
+  Future<void> _fetchUsers() async {
+    try {
+      final repo = GroupRepository();
+      final users = await repo.fetchAllUsers();
+      // Filter out users who are already members, and set a flag for them
+      for (final user in users) {
+        if (widget.group.members.contains(user.id)) {
+          user.isSelected = true; // used as "already in group"
+        }
+      }
+      setState(() {
+        _allUsers = users;
+        _filtered = users;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _allUsers = [];
+        _filtered = [];
+        _loading = false;
+      });
+    }
   }
 
   void _filterContacts() {
     final query = _searchController.text.toLowerCase();
     setState(() {
       if (query.isEmpty) {
-        _filteredContacts = List.from(_allContacts);
+        _filtered = List.from(_allUsers);
       } else {
-        _filteredContacts = _allContacts
-            .where((contact) =>
-                contact.name.toLowerCase().contains(query) ||
-                contact.email.toLowerCase().contains(query))
+        _filtered = _allUsers
+            .where((u) =>
+                u.name.toLowerCase().contains(query) ||
+                u.email.toLowerCase().contains(query))
             .toList();
       }
     });
   }
 
+  Future<void> _addSelectedMembers() async {
+    final repo = GroupRepository();
+    int added = 0, failed = 0;
+    for (final user in _selected) {
+      try {
+        await repo.addUserToGroup(user.id, widget.group.id);
+        added++;
+      } catch (_) {
+        failed++;
+      }
+    }
+    if (!mounted) return;
+    Navigator.pop(context, true); // true means "refresh members"
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Added $added member(s)' + (failed > 0 ? ', $failed failed' : '')),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final selectedContacts = _allContacts.where((c) => c.isSelected).toList();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Members'),
+        backgroundColor: const Color(0xFF0E1213),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const PageHeader(
-                title: 'Add Members to Group',
-                subtitle: 'Choose contacts to add to this group',
-              ),
-              TextField(
-                controller: _searchController,
-                decoration: AppTheme.inputDecoration(
-                  labelText: 'Search contacts',
-                  prefixIcon: const Icon(Icons.search, color: AppTheme.textGray),
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (selectedContacts.isNotEmpty) ...[
-                Text(
-                  'Selected (${selectedContacts.length})',
-                  style: AppTheme.subheadingStyle,
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 60,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: selectedContacts.length,
-                    itemBuilder: (context, index) {
-                      final contact = selectedContacts[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 12.0),
-                        child: Column(
-                          children: [
-                            Stack(
-                              children: [
-                                CircleAvatar(
-                                  radius: 20,
-                                  backgroundColor: AppTheme.mediumGray,
-                                  child: Text(
-                                    contact.name.substring(0, 1).toUpperCase(),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  right: -4,
-                                  top: -4,
-                                  child: GestureDetector(
-                                    onTap: () {
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        labelText: 'Search users',
+                        prefixIcon: const Icon(Icons.search),
+                      ),
+                      onChanged: (_) => _filterContacts(),
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: _filtered.length,
+                        itemBuilder: (context, i) {
+                          final user = _filtered[i];
+                          final alreadyInGroup = widget.group.members.contains(user.id);
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: alreadyInGroup ? Colors.grey : Colors.blue,
+                              backgroundImage: user.profilePictureUrl != null &&
+                                      user.profilePictureUrl!.isNotEmpty
+                                  ? NetworkImage('http://192.168.100.28:5241${user.profilePictureUrl!}')
+                                  : null,
+                              child: user.profilePictureUrl == null || user.profilePictureUrl!.isEmpty
+                                  ? Text(user.name.substring(0, 1).toUpperCase())
+                                  : null,
+                            ),
+                            title: Text(user.name, style: const TextStyle(color: Colors.white)),
+                            subtitle: Text(user.email, style: const TextStyle(color: Colors.white60)),
+                            trailing: alreadyInGroup
+                                ? const Text('Member',
+                                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))
+                                : Checkbox(
+                                    value: _selected.contains(user),
+                                    onChanged: (val) {
                                       setState(() {
-                                        contact.isSelected = false;
+                                        if (val == true) {
+                                          _selected.add(user);
+                                        } else {
+                                          _selected.remove(user);
+                                        }
                                       });
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.all(2),
-                                      decoration: const BoxDecoration(
-                                        color: Colors.red,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.close,
-                                        size: 12,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              contact.name.split(' ')[0],
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const Divider(height: 24),
-              ],
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _filteredContacts.length,
-                  itemBuilder: (context, index) {
-                    final contact = _filteredContacts[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: AppTheme.mediumGray,
-                        child: Text(
-                          contact.name.substring(0, 1).toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      title: Text(
-                        contact.name,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      subtitle: Text(
-                        contact.email,
-                        style: const TextStyle(color: AppTheme.textGray),
-                      ),
-                      trailing: Checkbox(
-                        value: contact.isSelected,
-                        activeColor: AppTheme.neonGreen,
-                        onChanged: (value) {
-                          setState(() {
-                            contact.isSelected = value!;
-                          });
+                                    }),
+                            enabled: !alreadyInGroup,
+                            onTap: alreadyInGroup
+                                ? null
+                                : () {
+                                    setState(() {
+                                      if (_selected.contains(user)) {
+                                        _selected.remove(user);
+                                      } else {
+                                        _selected.add(user);
+                                      }
+                                    });
+                                  },
+                          );
                         },
                       ),
-                      onTap: () {
-                        setState(() {
-                          contact.isSelected = !contact.isSelected;
-                        });
-                      },
-                    );
-                  },
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.person_add),
+                      label: const Text('Add to Group'),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(45),
+                        backgroundColor: Colors.green,
+                      ),
+                      onPressed: _selected.isEmpty ? null : _addSelectedMembers,
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              PrimaryButton(
-                text: 'Add to Group',
-                onPressed: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Added ${selectedContacts.length} member(s) to the group!',
-                      ),
-                      backgroundColor: AppTheme.neonGreen,
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
