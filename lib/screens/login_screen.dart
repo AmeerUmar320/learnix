@@ -315,27 +315,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 30),
-                              // Social login options
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  _buildSocialButton(
-                                    icon: Icons.g_mobiledata_rounded,
-                                    onPressed: () {},
-                                  ),
-                                  const SizedBox(width: 20),
-                                  _buildSocialButton(
-                                    icon: Icons.apple,
-                                    onPressed: () {},
-                                  ),
-                                  const SizedBox(width: 20),
-                                  _buildSocialButton(
-                                    icon: Icons.facebook,
-                                    onPressed: () {},
-                                  ),
-                                ],
-                              ),
                               const SizedBox(height: 40),
                               // Sign up option (REDIRECTION TO SIGNUP)
                               Row(

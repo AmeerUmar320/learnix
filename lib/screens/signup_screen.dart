@@ -337,16 +337,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                                     thickness: 0.5,
                                   ),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text(
-                                    'OR',
-                                    style: TextStyle(
-                                      color: Colors.white.withAlpha(153),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
                                 Expanded(
                                   child: Divider(
                                     color: Colors.white.withAlpha(76),
@@ -355,28 +345,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 30),
-                            // Social signup options
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                _buildSocialButton(
-                                  icon: Icons.g_mobiledata_rounded,
-                                  onPressed: () {},
-                                ),
-                                const SizedBox(width: 20),
-                                _buildSocialButton(
-                                  icon: Icons.apple,
-                                  onPressed: () {},
-                                ),
-                                const SizedBox(width: 20),
-                                _buildSocialButton(
-                                  icon: Icons.facebook,
-                                  onPressed: () {},
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 40),
                             // Login option
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
