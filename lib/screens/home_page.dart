@@ -1,4 +1,3 @@
-//home_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,13 +27,11 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadUserAndFetchGroups() async {
     final prefs = await SharedPreferences.getInstance();
     final uid = prefs.getInt('userId');
-    // final uid = 5;
     debugPrint("Loaded userId: $uid");
     if (uid != null) {
       setState(() {
         userId = uid;
       });
-      // fetch only if userId changed
       context.read<GroupBloc>().add(FetchGroupsForUser(uid));
     }
   }
@@ -60,7 +57,7 @@ class _HomePageState extends State<HomePage> {
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SearchAssistantRow(),
+                  SearchAssistantRow(userId: userId!),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Text(

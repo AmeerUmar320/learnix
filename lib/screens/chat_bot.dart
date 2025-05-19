@@ -1,9 +1,11 @@
-// lib/screens/chat_bot.dart
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ChatbotScreen extends StatefulWidget {
-  const ChatbotScreen({super.key});
+  final int userId;
+  const ChatbotScreen({super.key, required this.userId});
 
   @override
   State<ChatbotScreen> createState() => _ChatbotScreenState();
@@ -11,18 +13,13 @@ class ChatbotScreen extends StatefulWidget {
 
 class _ChatbotScreenState extends State<ChatbotScreen>
     with SingleTickerProviderStateMixin {
-  // Controllers
   final TextEditingController _queryController = TextEditingController();
-  final ScrollController _scrollController   = ScrollController();
+  final ScrollController _scrollController = ScrollController();
 
-  // Animation
   late final AnimationController _animationController;
-
-  // Chat state — now accepts dynamic values
   bool _isLoading = false;
   final List<Map<String, dynamic>> _chatHistory = [];
 
-  // Color scheme
   static const Color _bgColor         = Color(0xFF0E1213);
   static const Color _botBubbleColor  = Color(0xFF2E3B3B);
   static const Color _userBubbleColor = Color(0xFFB5FB67);
@@ -57,7 +54,7 @@ class _ChatbotScreenState extends State<ChatbotScreen>
     }
   }
 
-  void _sendMessage(String text) {
+  void _sendMessage(String text) async {
     final msg = text.trim();
     if (msg.isEmpty || _isLoading) return;
 
@@ -68,16 +65,36 @@ class _ChatbotScreenState extends State<ChatbotScreen>
     _queryController.clear();
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
 
-    Future.delayed(const Duration(seconds: 1), () {
+    try {
+      final resp = await http.post(
+        Uri.parse('http://192.168.100.28:5241/chatbot'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'userId': widget.userId, 'message': msg}),
+      );
+
+      String botReply;
+      if (resp.statusCode == 200) {
+        final data = jsonDecode(resp.body);
+        botReply = data['reply'] ?? "Sorry, no reply.";
+      } else {
+        botReply = "Sorry, there was an error getting a reply (${resp.statusCode}).";
+      }
+
+      setState(() {
+        _chatHistory.add({'role': 'assistant', 'content': botReply});
+        _isLoading = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    } catch (e) {
       setState(() {
         _chatHistory.add({
           'role': 'assistant',
-          'content': '🤖 Here’s a response to "$msg".'
+          'content': "Sorry, I couldn't connect to the server.",
         });
         _isLoading = false;
       });
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    });
+    }
   }
 
   void _clearChat() {
@@ -113,8 +130,7 @@ class _ChatbotScreenState extends State<ChatbotScreen>
                 ? _buildWelcome()
                 : ListView.builder(
                     controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     itemCount: _chatHistory.length,
                     itemBuilder: (ctx, i) {
                       final msg = _chatHistory[i];
@@ -128,28 +144,23 @@ class _ChatbotScreenState extends State<ChatbotScreen>
                               : Alignment.centerLeft,
                           child: Container(
                             constraints: BoxConstraints(
-                              maxWidth:
-                                  MediaQuery.of(context).size.width * 0.75,
+                              maxWidth: MediaQuery.of(context).size.width * 0.75,
                             ),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
-                              color: isUser
-                                  ? _userBubbleColor
-                                  : _botBubbleColor,
+                              color: isUser ? _userBubbleColor : _botBubbleColor,
                               borderRadius: BorderRadius.only(
                                 topLeft: const Radius.circular(16),
                                 topRight: const Radius.circular(16),
-                                bottomLeft: Radius.circular(
-                                    isUser ? 16 : 4),
-                                bottomRight: Radius.circular(
-                                    isUser ? 4 : 16),
+                                bottomLeft: Radius.circular(isUser ? 16 : 4),
+                                bottomRight: Radius.circular(isUser ? 4 : 16),
                               ),
                             ),
                             child: Text(
                               content,
                               style: TextStyle(
-                                  color: isUser ? _bgColor : _textColor),
+                                color: isUser ? _bgColor : _textColor,
+                              ),
                             ),
                           ),
                         ),
@@ -157,11 +168,9 @@ class _ChatbotScreenState extends State<ChatbotScreen>
                     },
                   ),
           ),
-
           if (_isLoading)
             Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
                   const SizedBox(width: 48),
@@ -183,18 +192,15 @@ class _ChatbotScreenState extends State<ChatbotScreen>
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Text('Thinking...',
-                            style: TextStyle(color: _textColor)),
+                        const Text('Thinking...', style: TextStyle(color: _textColor)),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
-
           Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 8, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             color: _botBubbleColor,
             child: Row(
               children: [
@@ -204,19 +210,16 @@ class _ChatbotScreenState extends State<ChatbotScreen>
                       color: _inputBgColor,
                       borderRadius: BorderRadius.circular(24),
                     ),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: TextField(
                       controller: _queryController,
                       style: const TextStyle(color: _textColor),
                       decoration: InputDecoration(
                         hintText: 'Ask Learnix…',
-                        hintStyle:
-                            const TextStyle(color: _hintColor),
+                        hintStyle: const TextStyle(color: _hintColor),
                         border: InputBorder.none,
                       ),
-                      textCapitalization:
-                          TextCapitalization.sentences,
+                      textCapitalization: TextCapitalization.sentences,
                       enabled: !_isLoading,
                       onSubmitted: _sendMessage,
                     ),
@@ -318,10 +321,8 @@ class _ChatbotScreenState extends State<ChatbotScreen>
           borderRadius: BorderRadius.circular(12),
           onTap: () => _sendMessage(label),
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-                vertical: 12, horizontal: 16),
-            child: Text(label,
-                style: const TextStyle(color: _textColor)),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            child: Text(label, style: const TextStyle(color: _textColor)),
           ),
         ),
       ),

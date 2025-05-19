@@ -1,9 +1,10 @@
-// lib/widgets/search_assistant_row.dart
 import 'package:flutter/material.dart';
 import 'package:group_chat_app/screens/chat_bot.dart';
 
 class SearchAssistantRow extends StatefulWidget {
-  const SearchAssistantRow({super.key});
+  final int userId;
+  const SearchAssistantRow({super.key, required this.userId});
+
   @override
   State<SearchAssistantRow> createState() => _SearchAssistantRowState();
 }
@@ -18,8 +19,8 @@ class _SearchAssistantRowState extends State<SearchAssistantRow> {
   @override
   Widget build(BuildContext context) {
     const sideMargin = 16.0;
-    const buttonSize = 48.0;  // base icon container
-    const hitPadding = 16.0;  // extra tappable area
+    const buttonSize = 48.0;
+    const hitPadding = 16.0;
     const spacing    = 16.0;
 
     return Padding(
@@ -36,7 +37,6 @@ class _SearchAssistantRowState extends State<SearchAssistantRow> {
               ? availableWidth - reservedWidth
               : buttonSize;
 
-          // 1) Build the animated search‐box
           Widget searchBox = AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
@@ -47,20 +47,17 @@ class _SearchAssistantRowState extends State<SearchAssistantRow> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: _isSearching
-                // ➤ Expanded TextField with big “×” button
                 ? TextField(
                     controller: _searchController,
                     autofocus: true,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: 'Search groups...',
-                      hintStyle:
-                          const TextStyle(color: Colors.white54),
+                      hintStyle: const TextStyle(color: Colors.white54),
                       border: InputBorder.none,
                       isDense: true,
-                      contentPadding:
-                          const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
                       prefixIcon: const Icon(
                         Icons.search,
                         color: Colors.white70,
@@ -87,7 +84,6 @@ class _SearchAssistantRowState extends State<SearchAssistantRow> {
                     onSubmitted: (_) =>
                         setState(() => _isSearching = false),
                   )
-                // ➤ Idle search icon centered
                 : const Center(
                     child: Icon(
                       Icons.search,
@@ -97,7 +93,6 @@ class _SearchAssistantRowState extends State<SearchAssistantRow> {
                   ),
           );
 
-          // 2) Wrap idle searchBox in a bigger hit area
           if (!_isSearching) {
             searchBox = GestureDetector(
               behavior: HitTestBehavior.translucent,
@@ -116,18 +111,14 @@ class _SearchAssistantRowState extends State<SearchAssistantRow> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 searchBox,
-
-                // 3) Only when idle, show assistant button
                 if (!_isSearching) ...[
                   const SizedBox(width: spacing),
-
-                  // Expand hit area around the assistant icon
                   GestureDetector(
                     behavior: HitTestBehavior.translucent,
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => const ChatbotScreen(),
+                          builder: (_) => ChatbotScreen(userId: widget.userId),
                         ),
                       );
                     },
