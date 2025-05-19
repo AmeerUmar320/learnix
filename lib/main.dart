@@ -1,5 +1,8 @@
+//main.dart
+import 'dart:io';
 import 'package:circle_nav_bar/circle_nav_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // <-- Add this for SystemNavigator
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:group_chat_app/blocs/task/task_bloc.dart';
 import 'package:group_chat_app/repositories/task_repository.dart';
@@ -17,7 +20,6 @@ import 'blocs/auth/auth_bloc.dart';
 import 'blocs/group/group_bloc.dart';
 import 'repositories/group_repository.dart';
 import 'screens/group_info_page.dart';
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -76,8 +78,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// ---- HOME PAGE WITH LOGOUT BUTTON IN APPBAR ----
-
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
   @override
@@ -103,7 +103,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  // Dummy notifications data
   final List<Map<String, String>> _notifications = [
     { 'title': 'New Assignment Posted', 'time': '2h ago' },
     { 'title': 'Group "Flutter Devs" invited you', 'time': '5h ago' },
@@ -140,8 +139,6 @@ class _MyHomePageState extends State<MyHomePage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
-        // If you have a NotificationsPopup widget, use it here
-        // Otherwise, show a simple list
         return ListView(
           padding: const EdgeInsets.all(16),
           shrinkWrap: true,
@@ -156,7 +153,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  // ---- REAL LOGOUT FUNCTIONALITY ----
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('loggedIn', false);
@@ -165,6 +161,36 @@ class _MyHomePageState extends State<MyHomePage> {
     await prefs.remove('profilePictureUrl');
     if (!mounted) return;
     Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+  }
+
+  Future<bool> _onWillPop() async {
+    final shouldExit = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF22282a),
+        title: const Text('Exit App', style: TextStyle(color: Colors.white)),
+        content: const Text('Are you sure you want to exit?', style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Exit', style: TextStyle(color: Color(0xFFB5FB67))),
+          ),
+        ],
+      ),
+    );
+    if (shouldExit == true) {
+      // Exit app using SystemNavigator.pop (works for Android, Windows, etc)
+      await Future.delayed(const Duration(milliseconds: 150));
+      SystemNavigator.pop();
+      // Optionally, for Android, you can also use: exit(0);
+      // exit(0);
+      return false;
+    }
+    return false;
   }
 
   @override
@@ -182,149 +208,147 @@ class _MyHomePageState extends State<MyHomePage> {
     final navHeight = 60.0;
     final screenW = MediaQuery.of(context).size.width;
 
-    // Replace this with your real API base (so the url is always correct)
     String? profilePicUrl = _profilePictureUrl != null && _profilePictureUrl!.isNotEmpty
-        ? 'http://192.168.100.28:5241${_profilePictureUrl!}' // use your server's IP/host here!
+        ? 'http://192.168.100.28:5241${_profilePictureUrl!}'
         : null;
 
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Scaffold(
-          extendBody: true,
-          appBar: AppBar(
-            backgroundColor: appBarBg,
-            elevation: 0,
-            toolbarHeight: 80,
-            automaticallyImplyLeading: false,
-            titleSpacing: 16,
-            title: Row(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundImage: profilePicUrl != null
-                    ? NetworkImage(profilePicUrl)
-                    : const AssetImage('assets/profile (7).jpg') as ImageProvider,
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Scaffold(
+            extendBody: true,
+            appBar: AppBar(
+              backgroundColor: appBarBg,
+              elevation: 0,
+              toolbarHeight: 80,
+              automaticallyImplyLeading: false,
+              titleSpacing: 16,
+              title: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundImage: profilePicUrl != null
+                      ? NetworkImage(profilePicUrl)
+                      : const AssetImage('assets/profile (7).jpg') as ImageProvider,
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _userName != null && _userName!.isNotEmpty ? 'Hey, $_userName' : 'Hey!',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Text(
+                        'Welcome back!',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    color: Color.fromARGB(77, 118, 131, 131),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.notifications_none),
+                    color: Colors.white,
+                    onPressed: _showNotificationsPopup,
+                  ),
                 ),
-                const SizedBox(width: 12),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _userName != null && _userName!.isNotEmpty ? 'Hey, $_userName' : 'Hey!',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Text(
-                      'Welcome back!',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
+                Container(
+                  margin: const EdgeInsets.only(right: 16),
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    color: Color.fromARGB(77, 131, 118, 118),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.logout),
+                    color: Colors.white,
+                    tooltip: 'Logout',
+                    onPressed: _logout,
+                  ),
                 ),
               ],
             ),
-            actions: [
-              // Notifications icon
-              Container(
-                margin: const EdgeInsets.only(right: 8),
-                width: 40,
-                height: 40,
-                decoration: const BoxDecoration(
-                  color: Color.fromARGB(77, 118, 131, 131),
-                  shape: BoxShape.circle,
+            bottomNavigationBar: CircleNavBar(
+              color: navBg,
+              padding: EdgeInsets.zero,
+              activeIndex: 1,
+              height: navHeight,
+              circleWidth: circleSize,
+              circleColor: circleBg,
+              shadowColor: Colors.black26,
+              elevation: 8,
+              onTap: _onTap,
+              tabCurve: Curves.easeInOutBack,
+              iconCurve: Curves.elasticOut,
+              inactiveIcons: [
+                Icon(
+                  _selectedPage == 0 ? Icons.home : Icons.home_outlined,
+                  size: 28,
+                  color: leftColor,
                 ),
-                child: IconButton(
-                  icon: const Icon(Icons.notifications_none),
-                  color: Colors.white,
-                  onPressed: _showNotificationsPopup,
+                Icon(_centerIcon, size: 28, color: iconColor),
+                Icon(
+                  _selectedPage == 1 ? Icons.assignment : Icons.assignment_outlined,
+                  size: 28,
+                  color: rightColor,
                 ),
-              ),
-              // Logout button (top right)
-              Container(
-                margin: const EdgeInsets.only(right: 16),
-                width: 40,
-                height: 40,
-                decoration: const BoxDecoration(
-                  color: Color.fromARGB(77, 131, 118, 118),
-                  shape: BoxShape.circle,
+              ],
+              activeIcons: [
+                Icon(
+                  _selectedPage == 0 ? Icons.home : Icons.home_outlined,
+                  size: 28,
+                  color: leftColor,
                 ),
-                child: IconButton(
-                  icon: const Icon(Icons.logout),
-                  color: Colors.white,
-                  tooltip: 'Logout',
-                  onPressed: _logout,
+                Icon(_centerIcon, size: 28, color: iconColor),
+                Icon(
+                  _selectedPage == 1 ? Icons.assignment : Icons.assignment_outlined,
+                  size: 28,
+                  color: rightColor,
                 ),
-              ),
-            ],
+              ],
+            ),
+            body: IndexedStack(
+              index: _selectedPage,
+              children: const [
+                HomePage(),
+                TasksPage(),
+              ],
+            ),
           ),
-          // ---- Your Bottom Navigation ----
-          bottomNavigationBar: CircleNavBar(
-            color: navBg,
-            padding: EdgeInsets.zero,
-            activeIndex: 1,
-            height: navHeight,
-            circleWidth: circleSize,
-            circleColor: circleBg,
-            shadowColor: Colors.black26,
-            elevation: 8,
-            onTap: _onTap,
-            tabCurve: Curves.easeInOutBack,
-            iconCurve: Curves.elasticOut,
-            inactiveIcons: [
-              Icon(
-                _selectedPage == 0 ? Icons.home : Icons.home_outlined,
-                size: 28,
-                color: leftColor,
-              ),
-              Icon(_centerIcon, size: 28, color: iconColor),
-              Icon(
-                _selectedPage == 1 ? Icons.assignment : Icons.assignment_outlined,
-                size: 28,
-                color: rightColor,
-              ),
-            ],
-            activeIcons: [
-              Icon(
-                _selectedPage == 0 ? Icons.home : Icons.home_outlined,
-                size: 28,
-                color: leftColor,
-              ),
-              Icon(_centerIcon, size: 28, color: iconColor),
-              Icon(
-                _selectedPage == 1 ? Icons.assignment : Icons.assignment_outlined,
-                size: 28,
-                color: rightColor,
-              ),
-            ],
+          Positioned(
+            bottom: navHeight - (circleSize / 2),
+            left: (screenW / 2) - (circleSize / 2),
+            width: circleSize,
+            height: circleSize,
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () => _onTap(1),
+              child: const SizedBox.expand(),
+            ),
           ),
-          body: IndexedStack(
-            index: _selectedPage,
-            children: const [
-              HomePage(),
-              TasksPage(),
-            ],
-          ),
-        ),
-        // Full-circle touch layer
-        Positioned(
-          bottom: navHeight - (circleSize / 2),
-          left: (screenW / 2) - (circleSize / 2),
-          width: circleSize,
-          height: circleSize,
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onTap: () => _onTap(1),
-            child: const SizedBox.expand(),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
