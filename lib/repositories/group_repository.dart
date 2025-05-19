@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:group_chat_app/models/group_resource_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/group_model.dart';
@@ -157,4 +158,28 @@ class GroupRepository {
       throw Exception('Failed to add user to group (${response.body})');
     }
   }
+
+  Future<void> uploadGroupResource({
+  required int groupId,
+  required int uploadedById,
+  required File file,
+}) async {
+  final uri = Uri.parse('http://192.168.100.28:5241/api/groupresources/upload');
+  var request = http.MultipartRequest('POST', uri)
+    ..fields['groupId'] = groupId.toString()
+    ..fields['uploadedById'] = uploadedById.toString()
+    ..files.add(await http.MultipartFile.fromPath('file', file.path));
+  final response = await request.send();
+  if (response.statusCode != 200) {
+    throw Exception('Failed to upload resource');
+  }
+}
+
+Future<List<GroupResourceModel>> fetchGroupResources(int groupId) async {
+  final url = 'http://192.168.100.28:5241/api/groupresources/group/$groupId';
+  final resp = await http.get(Uri.parse(url));
+  if (resp.statusCode != 200) throw Exception('Failed to fetch resources');
+  final List<dynamic> data = jsonDecode(resp.body);
+  return data.map((e) => GroupResourceModel.fromJson(e)).toList();
+}
 }

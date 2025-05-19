@@ -299,10 +299,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             child: Row(
               children: [
-                IconButton(
-                  icon: const Icon(Icons.photo_camera, color: Colors.white70),
-                  onPressed: _showImageSourceOptions,
-                ),
                 Expanded(
                   child: TextField(
                     controller: _messageController,
