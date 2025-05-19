@@ -55,7 +55,7 @@ class _GroupInfoPageState extends State<GroupInfoPage> {
                 backgroundColor: AppTheme.neonGreen,
               ),
             );
-            Navigator.pop(context); // Go back or navigate to group screen
+            Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
           } else if (state is GroupFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
