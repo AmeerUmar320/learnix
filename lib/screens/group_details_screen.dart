@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/group_model.dart';
 import '../models/user_model.dart';
-import '../models/group_resource_model.dart'; // You need to create this model
+import '../models/group_resource_model.dart';
 import '../repositories/group_repository.dart';
 import 'package:group_chat_app/screens/add_members.dart';
 import 'package:image_picker/image_picker.dart';
@@ -25,12 +25,10 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
   int _tabIndex = 0;
   late TabController _tabController;
 
-  // Image picker state
   File? _pickedImage;
   String? _pickedImageName;
   bool _isUploading = false;
 
-  // Resource list
   List<GroupResourceModel> _resources = [];
   bool _resourcesLoading = false;
 
@@ -210,6 +208,60 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
         backgroundColor: Colors.red,
       ));
     }
+  }
+
+  void _showImageFullScreen(String fileUrl, String fileName) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Only back button will dismiss
+      builder: (_) => Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                minScale: 0.8,
+                maxScale: 3.0,
+                child: Image.network(
+                  'http://192.168.100.28:5241$fileUrl',
+                  fit: BoxFit.contain,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const Center(child: CircularProgressIndicator());
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Center(
+                      child: Icon(Icons.broken_image, size: 60, color: Colors.white54),
+                    );
+                  },
+                ),
+              ),
+            ),
+            Positioned(
+              top: 20,
+              left: 12,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white, size: 32),
+                onPressed: () => Navigator.of(context).pop(),
+                tooltip: 'Back',
+              ),
+            ),
+            Positioned(
+              bottom: 28,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Text(
+                  fileName,
+                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -406,7 +458,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
                           final r = _resources[i];
                           return GestureDetector(
                             onTap: () {
-                              // TODO: open image viewer or file if needed
+                              _showImageFullScreen(r.fileUrl, r.fileName);
                             },
                             child: Container(
                               decoration: BoxDecoration(
