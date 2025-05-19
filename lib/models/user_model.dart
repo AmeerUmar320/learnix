@@ -3,7 +3,7 @@ class UserModel {
   final String name;
   final String email;
   final String? profilePictureUrl;
-  bool isSelected; // for UI selection only
+  bool isSelected;
 
   UserModel({
     required this.id,
@@ -14,11 +14,9 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-        id: json['id'] is int
-            ? json['id']
-            : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+        id: json['id'] ?? json['userId'],
         name: json['name'] ?? '',
         email: json['email'] ?? '',
-        profilePictureUrl: json['profilePictureUrl']?.toString(),
+        profilePictureUrl: json['profilePictureUrl'],
       );
 }

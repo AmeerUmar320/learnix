@@ -10,13 +10,6 @@ class GroupInitial extends GroupState {}
 
 class GroupLoading extends GroupState {}
 
-class GroupSuccess extends GroupState {
-  final GroupModel group;
-  GroupSuccess(this.group);
-  @override
-  List<Object?> get props => [group];
-}
-
 class GroupsLoaded extends GroupState {
   final List<GroupModel> groups;
   GroupsLoaded(this.groups);
@@ -29,4 +22,11 @@ class GroupFailure extends GroupState {
   GroupFailure(this.error);
   @override
   List<Object?> get props => [error];
+}
+
+class GroupSuccess extends GroupState {
+  final GroupModel group;
+  GroupSuccess(this.group);
+  @override
+  List<Object?> get props => [group];
 }

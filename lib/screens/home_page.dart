@@ -24,13 +24,16 @@ class _HomePageState extends State<HomePage> {
     _loadUserAndFetchGroups();
   }
 
-  void _loadUserAndFetchGroups() async {
+  Future<void> _loadUserAndFetchGroups() async {
     final prefs = await SharedPreferences.getInstance();
     final uid = prefs.getInt('userId');
+    // final uid = 5;
+    debugPrint("Loaded userId: $uid");
     if (uid != null) {
       setState(() {
         userId = uid;
       });
+      // fetch only if userId changed
       context.read<GroupBloc>().add(FetchGroupsForUser(uid));
     }
   }
@@ -46,78 +49,83 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: const Color(0xFF0E1213),
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SearchAssistantRow(),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Text(
-                'Groups',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+        child: userId == null
+            ? const Center(
+                child: Text(
+                  'No user found. Please login again.',
+                  style: TextStyle(color: Colors.white70),
                 ),
-              ),
-            ),
-            Expanded(
-              child: BlocBuilder<GroupBloc, GroupState>(
-                builder: (context, state) {
-                  if (state is GroupLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (state is GroupsLoaded) {
-                    final List<GroupModel> groups = state.groups;
-                    if (groups.isEmpty) {
-                      return const Center(
-                        child: Text(
-                          'You are not part of any groups.',
-                          style: TextStyle(color: Colors.white54),
-                        ),
-                      );
-                    }
-                    return RefreshIndicator(
-                      onRefresh: _refresh,
-                      child: ListView.builder(
-                        itemCount: groups.length,
-                        itemBuilder: (context, i) {
-                          final group = groups[i];
-                          return GroupCard(
-  imageUrl: group.profilePictureUrl != null && group.profilePictureUrl!.isNotEmpty
-      ? 'http://192.168.100.28:5241${group.profilePictureUrl!}'
-      : null,
-  name: group.name,
-  subject: group.description ?? 'No subject',
-  lastMessageTime: '—',
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => GroupChatScreen(
-          groupName: group.name,
-          memberCount: 1, // For now, use dummy. Later, fetch real member count.
-        ),
-      ),
-    );
-  },
-);
-                        },
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SearchAssistantRow(),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Text(
+                      'Groups',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
-                    );
-                  } else if (state is GroupFailure) {
-                    return Center(
-                      child: Text(
-                        'Error: ${state.error}',
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    );
-                  }
-                  return const Center(child: CircularProgressIndicator());
-                },
+                    ),
+                  ),
+                  Expanded(
+                    child: BlocBuilder<GroupBloc, GroupState>(
+                      builder: (context, state) {
+                        if (state is GroupLoading) {
+                          return const Center(child: CircularProgressIndicator());
+                        } else if (state is GroupsLoaded) {
+                          final List<GroupModel> groups = state.groups;
+                          debugPrint('Loaded groups for user $userId: ${groups.map((g) => g.name).toList()}');
+                          if (groups.isEmpty) {
+                            return const Center(
+                              child: Text(
+                                'You are not part of any groups.',
+                                style: TextStyle(color: Colors.white54),
+                              ),
+                            );
+                          }
+                          return RefreshIndicator(
+                            onRefresh: _refresh,
+                            child: ListView.builder(
+                              itemCount: groups.length,
+                              itemBuilder: (context, i) {
+                                final group = groups[i];
+                                return GroupCard(
+                                  imageUrl: group.profilePictureUrl != null && group.profilePictureUrl!.isNotEmpty
+                                      ? 'http://192.168.100.28:5241${group.profilePictureUrl!}'
+                                      : null,
+                                  name: group.name,
+                                  subject: group.description ?? 'No subject',
+                                  lastMessageTime: '—',
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => GroupChatScreen(group: group),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          );
+                        } else if (state is GroupFailure) {
+                          return Center(
+                            child: Text(
+                              'Error: ${state.error}',
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          );
+                        }
+                        return const Center(child: CircularProgressIndicator());
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -61,9 +61,7 @@ class MyApp extends StatelessWidget {
           '/group_details': (context) {
             final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
             return GroupDetailsScreen(
-              groupName: args?['groupName'] ?? '',
-              subject: args?['subject'] ?? '',
-              imageAsset: args?['imageAsset'] ?? 'assets/profiles/profile_7.jpg',
+              group: args!['group'],
             );
           },
           '/group_info': (context) => const GroupInfoPage(selectedUsers: []),

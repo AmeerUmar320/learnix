@@ -8,6 +8,7 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
   GroupBloc(this.groupRepository) : super(GroupInitial()) {
     on<CreateGroupRequested>(_onCreateGroupRequested);
     on<FetchGroupsForUser>(_onFetchGroupsForUser);
+    on<LeaveGroupRequested>(_onLeaveGroupRequested);
   }
 
   Future<void> _onCreateGroupRequested(
@@ -30,6 +31,19 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
       FetchGroupsForUser event, Emitter<GroupState> emit) async {
     emit(GroupLoading());
     try {
+      final groups = await groupRepository.fetchGroupsForUser(event.userId);
+      emit(GroupsLoaded(groups));
+    } catch (e) {
+      emit(GroupFailure(e.toString()));
+    }
+  }
+
+  Future<void> _onLeaveGroupRequested(
+      LeaveGroupRequested event, Emitter<GroupState> emit) async {
+    try {
+      await groupRepository.removeCurrentUserFromGroup(event.groupId);
+      // After leaving, refresh
+      emit(GroupLoading());
       final groups = await groupRepository.fetchGroupsForUser(event.userId);
       emit(GroupsLoaded(groups));
     } catch (e) {

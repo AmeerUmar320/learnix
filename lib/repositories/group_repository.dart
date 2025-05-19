@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/group_model.dart';
@@ -24,19 +25,35 @@ class GroupRepository {
     final response = await http.get(Uri.parse('$baseUrl/groupmemberships'));
     if (response.statusCode == 200) {
       final List<dynamic> allMemberships = jsonDecode(response.body);
-      final List<dynamic> userMemberships =
-          allMemberships.where((m) => m['userId'] == userId).toList();
+      debugPrint('All group memberships from API: $allMemberships');
+      debugPrint('Looking for userId: $userId');
 
+      final List<dynamic> userMemberships = allMemberships.where((m) {
+        final membershipUserId = m['userId'];
+        debugPrint('Checking membership: $m, membershipUserId: $membershipUserId');
+        return membershipUserId.toString() == userId.toString();
+      }).toList();
+
+      debugPrint('User $userId memberships: $userMemberships');
       final groupIds = userMemberships.map((m) => m['groupId']).toSet().toList();
+      debugPrint('User $userId groupIds: $groupIds');
+
       List<GroupModel> groups = [];
       for (final groupId in groupIds) {
-        groups.add(await fetchGroupById(groupId));
+        try {
+          groups.add(await fetchGroupById(groupId));
+        } catch (e) {
+          debugPrint('Error loading group $groupId: $e');
+        }
       }
+      debugPrint('Fetched groups: ${groups.map((g) => g.name).toList()}');
       return groups;
     } else {
+      debugPrint('Failed to load group memberships: ${response.statusCode}');
       throw Exception('Failed to load group memberships');
     }
   }
+
 
   /// Fetch single group by ID
   Future<GroupModel> fetchGroupById(int groupId) async {
@@ -92,4 +109,19 @@ class GroupRepository {
     }
   }
 
+  Future<void> removeCurrentUserFromGroup(int groupId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('userId');
+    if (userId == null) throw Exception('User not logged in');
+    // Delete group membership
+    final membershipsResp = await http.get(Uri.parse('$baseUrl/groupmemberships'));
+    if (membershipsResp.statusCode != 200) throw Exception('Failed to load memberships');
+    final memberships = (jsonDecode(membershipsResp.body) as List)
+        .where((m) => m['groupId'] == groupId && m['userId'].toString() == userId.toString())
+        .toList();
+    if (memberships.isNotEmpty) {
+      // Use [userId, groupId] as keys for DELETE
+      await http.delete(Uri.parse('$baseUrl/groupmemberships/$userId/$groupId'));
+    }
+  }
 }

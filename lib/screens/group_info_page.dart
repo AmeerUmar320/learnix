@@ -31,13 +31,13 @@ class _GroupInfoPageState extends State<GroupInfoPage> {
     final memberIds = widget.selectedUsers.map((u) => u.id).toList();
 
     context.read<GroupBloc>().add(
-          CreateGroupRequested(
-            name: name,
-            description: description.isEmpty ? null : description,
-            memberIds: memberIds,
-            image: _groupImage,
-          ),
-        );
+      CreateGroupRequested(
+        name: name,
+        description: description.isEmpty ? null : description,
+        memberIds: memberIds,
+        image: _groupImage,
+      ),
+    );
   }
 
   @override
@@ -55,7 +55,7 @@ class _GroupInfoPageState extends State<GroupInfoPage> {
                 backgroundColor: AppTheme.neonGreen,
               ),
             );
-            Navigator.pop(context); // or navigate as desired
+            Navigator.pop(context); // Go back or navigate to group screen
           } else if (state is GroupFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

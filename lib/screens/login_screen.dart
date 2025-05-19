@@ -74,9 +74,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   Future<void> _handleAuthState(BuildContext context, AuthState state) async {
     if (state is AuthSuccess) {
       final prefs = await SharedPreferences.getInstance();
+      debugPrint('Login successful! userId from backend: ${state.user.id}');
+      if (state.user.id == 0) {
+        // Warn you if backend is still returning 0
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Warning: Backend returned userId 0! Please check backend.')),
+        );
+      }
       await prefs.setBool('loggedIn', true);
       await prefs.setInt('userId', state.user.id);
-      // Use '' as fallback for nullable fields
       await prefs.setString('userName', state.user.name.isNotEmpty ? state.user.name : '');
       await prefs.setString('profilePictureUrl', state.user.profilePictureUrl ?? '');
       if (!mounted) return;
